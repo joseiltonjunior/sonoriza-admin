@@ -1,0 +1,19 @@
+{
+  "clients": [
+    {
+      "id": "04b77eef-4677-4f12-9495-8623546f5469",
+      "name": "John Doe",
+      "cpf": "99999999999",
+      "rg": "9999999",
+      "issuingBody": "SDS",
+      "cellPhone": "99999999999",
+      "telephone": "99999999",
+      "dateOfBirth": "string",
+      "nationality": "string",
+      "stateOfBirth": "string",
+      "cityOfBirth": "string",
+      "maritalStatus": "string",
+      "gender": "string"
+    }
+  ]
+}
