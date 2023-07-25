@@ -1,7 +1,16 @@
+import { Progress } from '@/components/Progress/Index'
+import { Total } from '@/components/Total'
+
 export function Home() {
   return (
-    <div className="">
-      <h2 className="">hello world!!</h2>
+    <div className="max-w-3xl">
+      <h1 className="font-bold text-blue-600 leading-6">Vendas</h1>
+
+      <h1 className="font-bold text-green-400 leading-8">Nova vendas</h1>
+
+      <Progress currentIndex={5} />
+
+      <Total value={114.75} />
     </div>
   )
 }

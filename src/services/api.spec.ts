@@ -1,8 +1,8 @@
 import request from 'supertest'
 import { describe, expect, it } from 'vitest'
 import { v4 as uuidv4 } from 'uuid'
-import { ClientProps } from '../types/client'
-import { handleFindClientByCpf } from '../utils/tests/handleFindClientByCpf'
+import { ClientProps } from '@/types/client'
+import { findClientByCpf } from '@/utils/tests/findClientByCpf'
 
 describe('Check CRUD API', () => {
   it('slould be able to fetch many clients', async () => {
@@ -53,7 +53,7 @@ describe('Check CRUD API', () => {
 it('should be able to edit an existing cliente', async () => {
   const apiUrl = import.meta.env.VITE_API_URL
 
-  const clientToEdit = await handleFindClientByCpf('123.456.789-00')
+  const clientToEdit = await findClientByCpf('123.456.789-00')
 
   expect(clientToEdit).toBeDefined()
 
@@ -79,7 +79,7 @@ it('should be able to edit an existing cliente', async () => {
 it('should be able to delete an existing cliente', async () => {
   const apiUrl = import.meta.env.VITE_API_URL
 
-  const clientToDelete = await handleFindClientByCpf('123.456.789-00')
+  const clientToDelete = await findClientByCpf('123.456.789-00')
 
   expect(clientToDelete).toBeDefined()
 
