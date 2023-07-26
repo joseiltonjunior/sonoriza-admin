@@ -4,6 +4,7 @@ export default {
   theme: {
     screens: {
       md: { max: '899px' },
+      base: { max: '1250px' },
     },
     extend: {
       colors: {

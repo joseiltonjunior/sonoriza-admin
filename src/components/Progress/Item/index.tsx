@@ -1,4 +1,6 @@
-interface ItemProps {
+import { ComponentProps } from 'react'
+
+interface ItemProps extends ComponentProps<'div'> {
   title: string
   index: number
   currentIndex?: number
@@ -11,16 +13,17 @@ export function Item({ title, index, currentIndex }: ItemProps) {
 
   return (
     <div
-      className={`${
-        isCurrent
-          ? 'bg-blue-400 text-white rounded-r-2xl  z-10'
-          : isBeforeCurrent
-          ? 'bg-green-400 text-white rounded-r-2xl z-20 '
-          : 'bg-white'
-      } font-bold text-sm w-auto items-center flex justify-center -ml-7 px-12 md:p-0 md:m-0 md:bg-green-400 md:text-base h-[3.35rem] md:rounded-2xl
-      `}
+      data-is-current={isCurrent}
+      data-is-before-current={isBeforeCurrent}
+      className={`font-bold text-sm h-[3.35rem] items-center flex justify-center bg-white -ml-7 px-12  data-[is-before-current=true]:before-current-progress md:progress-item-mobile data-[is-current=true]:current-progress`}
     >
-      <p className={`${isAfterCurrent && 'text-green-400'}`}>{index}</p>
+      <p
+        data-is-after-current={isAfterCurrent}
+        data-is-first-item={index === 1}
+        className={`data-[is-after-current=true]:text-green-400 data-[is-first-item=true]:ml-6 md:ml-0`}
+      >
+        {index}
+      </p>
       <p className="ml-2">{title}</p>
     </div>
   )

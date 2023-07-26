@@ -17,10 +17,15 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.1.1",
     "axios": "^1.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "supertest": "^6.3.3"
+    "react-hook-form": "^7.45.2",
+    "react-input-mask": "^2.0.4",
+    "supertest": "^6.3.3",
+    "tailwind-merge": "^1.14.0",
+    "yup": "^1.2.0"
   },
   "devDependencies": {
     "@rocketseat/eslint-config": "^2.1.0",
@@ -28,6 +33,7 @@
     "@types/node": "^20.4.4",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
+    "@types/react-input-mask": "^3.0.2",
     "@types/supertest": "^2.0.12",
     "@types/uuid": "^9.0.2",
     "@typescript-eslint/eslint-plugin": "^6.0.0",

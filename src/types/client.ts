@@ -1,11 +1,11 @@
 export interface ClientProps {
-  id: string
+  id?: string
   name: string
   cpf: string
   rg: string
   issuingBody: string
   cellPhone: string
-  telephone: string
+  telePhone: string
   dateOfBirth: string
   nationality: string
   stateOfBirth: string

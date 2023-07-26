@@ -8,9 +8,9 @@ export function Layout({ children }: LayoutProps) {
   return (
     <>
       <Header />
-      <div className="pt-20 flex h-[calc(100vh-80px)]">
+      <div className="pt-20 flex h-full ">
         <Aside />
-        <main className="py-20 px-10 w-screen h-[calc(100vh-80px)] md:py-10 md:px-5">
+        <main className="ml-[350px] w-screen py-20 px-10 md:py-10 md:px-5 base:ml-0">
           {children}
         </main>
       </div>

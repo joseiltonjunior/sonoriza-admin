@@ -1,21 +1,25 @@
-import { ButtonHTMLAttributes } from 'react'
+import { ComponentProps } from 'react'
+import { twMerge } from 'tailwind-merge'
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ComponentProps<'button'> {
   title: string
-  button?: 'green' | 'dark' | 'blue'
+  variant?: 'green' | 'dark' | 'blue' | 'outline'
 }
 
-export function Button({ title, button = 'blue', ...rest }: ButtonProps) {
-  const colorClasses = {
-    green: 'bg-green-400 hover:bg-green-400/90',
-    dark: 'bg-blue-600 hover:bg-blue-600/90',
-    blue: 'bg-blue-400 hover:bg-blue-400/90',
-  }
-
+export function Button({
+  title,
+  variant = 'blue',
+  className,
+  ...rest
+}: ButtonProps) {
   return (
     <button
+      data-variant={variant}
+      className={twMerge(
+        `rounded text-sm text-white font-bold p-2 w-full h-fit data-[variant=green]:button-green data-[variant=blue]:button-blue data-[variant=dark]:button-blue-dark data-[variant=outline]:button-outline`,
+        className,
+      )}
       {...rest}
-      className={`rounded text-sm text-white font-bold p-2 w-full ${colorClasses[button]}`}
     >
       {title}
     </button>
