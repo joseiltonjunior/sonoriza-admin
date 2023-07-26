@@ -1,5 +1,5 @@
-import { FindClient } from '@/components/FindClient'
 import { Progress } from '@/components/Progress/Index'
+import { Steps } from '@/components/Steps'
 import { Total } from '@/components/Total'
 
 export function Home() {
@@ -13,7 +13,7 @@ export function Home() {
 
       <Total value={114.75} />
 
-      <FindClient />
+      <Steps />
     </div>
   )
 }
