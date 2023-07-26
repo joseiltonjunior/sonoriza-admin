@@ -11,8 +11,8 @@ export function Total({ value }: TotalProps) {
   })
 
   return (
-    <div className="bg-white mt-8 rounded-3xl h-[3.2rem] items-center justify-end flex overflow-hidden">
-      <div className="flex bg-blue-600 w-[19.063rem] md:w-full h-full items-center rounded-3xl px-5 justify-between">
+    <div className="bg-white mt-8 rounded-2xl h-[3.2rem] items-center justify-end flex overflow-hidden">
+      <div className="flex bg-blue-600 w-[19.063rem] md:w-full h-full items-center rounded-2xl px-5 justify-between">
         <div className="flex gap-7">
           <p className="text-white font-bold">Subtotal</p>
           <p className="text-green-400 font-semibold">{valorFormatado}</p>

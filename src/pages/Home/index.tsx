@@ -1,3 +1,4 @@
+import { Content } from '@/components/Content'
 import { Progress } from '@/components/Progress/Index'
 import { Total } from '@/components/Total'
 
@@ -8,9 +9,11 @@ export function Home() {
 
       <h1 className="font-bold text-green-400 leading-8">Nova vendas</h1>
 
-      <Progress currentIndex={5} />
+      <Progress currentIndex={2} />
 
       <Total value={114.75} />
+
+      <Content title="Buscar cliente" />
     </div>
   )
 }
