@@ -1,6 +1,6 @@
 import { PropsWithChildren } from 'react'
-import { Header } from '../Header'
-import { Aside } from '@/components/Aside'
+import { Header } from './Header'
+import { Aside } from './Aside'
 
 interface LayoutProps extends PropsWithChildren {}
 

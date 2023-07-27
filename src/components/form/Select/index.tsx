@@ -29,7 +29,7 @@ export function Select({
     <div>
       <h4 className="font-bold text-sm my-3">{label}</h4>
       {isLoading || !options ? (
-        <Skeleton height={38} />
+        <Skeleton height={38} className="z-10" />
       ) : (
         <div className="relative inline-block w-full">
           {register ? (

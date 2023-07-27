@@ -5,7 +5,7 @@ export interface ClientProps {
   rg: string
   issuingBody: string
   cellPhone: string
-  telePhone: string
+  telePhone: string | undefined
   dateOfBirth: string
   nationality: string
   stateOfBirth: string
