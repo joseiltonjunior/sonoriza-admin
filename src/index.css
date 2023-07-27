@@ -41,7 +41,7 @@
 
 @layer components {
     .button-outline {
-        @apply bg-transparent border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white
+        @apply bg-transparent border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white disabled:bg-transparent disabled:border-blue-600/40 disabled:text-blue-600/40 disabled:hover:bg-transparent disabled:hover:text-blue-600/40
     }
 
     .button-green {

@@ -38,6 +38,7 @@ export function Select({
               {...register(name as keyof ClientProps)}
               value={value}
               onChange={onChange}
+              autoComplete="none"
               className="block appearance-none w-full bg-white border border-gray-300 rounded px-4 py-2 pr-8 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 cursor-pointer data-[is-error=true]:border-red-600"
             >
               {placeholder && (

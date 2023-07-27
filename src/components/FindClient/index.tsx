@@ -4,6 +4,7 @@ import { Select } from '../form/Select'
 import { Input } from '../form/Input'
 import { Controller, useForm } from 'react-hook-form'
 import { ClientProps } from '@/types/client'
+import { v4 as uuidv4 } from 'uuid'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 import { clientSchema } from './clientSchema'
@@ -20,6 +21,7 @@ import { genderOptions } from '@/utils/genderOptions'
 import { Option } from '@/types/optionSelect'
 import { useRequest } from '@/hooks/useRequests'
 import { DatePickerCustom } from '../form/DatePicker'
+import { handleFormattedDate } from '@/utils/formatDate'
 
 interface FindClientProps {
   check?: React.Dispatch<React.SetStateAction<boolean>>
@@ -29,30 +31,74 @@ export function FindClient({ check }: FindClientProps) {
   const {
     register,
     setValue,
+    getValues,
     handleSubmit,
     control,
     formState: { errors },
   } = useForm<ClientProps>({
+    defaultValues: {
+      stateOfBirth: '',
+      cityOfBirth: '',
+      maritalStatus: '',
+      gender: '',
+    },
     resolver: yupResolver(clientSchema),
   })
 
-  const { handleFetchCitiesOfState, handleFetchClients } = useRequest()
+  const {
+    handleFetchCitiesOfState,
+    handleFetchClients,
+    handleUpdateClient,
+    handleCreateClient,
+  } = useRequest()
 
-  const [selectedOption, setSelectedOption] = useState('')
+  const [selectedClientId, setSelectedClientId] = useState('')
+  const [findClientId, setFindClientId] = useState('')
 
   const [listCities, setListCities] = useState<Option[]>()
   const [listClients, setListClients] = useState<Option[]>()
-  // const [date, setDate] = useState<Date>()
+  const [clientList, setClientList] = useState<ClientProps[]>()
 
-  function submit(data: ClientProps) {
-    console.log(data)
-    if (check) {
-      check(true)
+  const handleFetchCitiesData = useCallback(
+    async (state: string) => {
+      const responseCities = (await handleFetchCitiesOfState(state)) as Option[]
+
+      setListCities(responseCities)
+    },
+    [handleFetchCitiesOfState],
+  )
+
+  const handleAutoCompleteClientData = useCallback(() => {
+    const filterClient = clientList?.find(
+      (client) => client.id === findClientId,
+    )
+
+    if (filterClient) {
+      handleFetchCitiesData(filterClient.stateOfBirth)
+      setSelectedClientId(filterClient.id!)
+      setValue('name', filterClient.name)
+      setValue('cellPhone', filterClient.cellPhone)
+      setValue('cityOfBirth', filterClient.cityOfBirth)
+      setValue('dateOfBirth', filterClient.dateOfBirth)
+      setValue('gender', filterClient.gender)
+      setValue('issuingBody', filterClient.issuingBody)
+      setValue('maritalStatus', filterClient.maritalStatus)
+      setValue('nationality', filterClient.nationality)
+      setValue('cpf', filterClient.cpf)
+      setValue('rg', filterClient.rg)
+      setValue('telePhone', filterClient.telePhone)
+      setValue('stateOfBirth', filterClient.stateOfBirth)
+
+      if (check) {
+        check(true)
+      }
     }
-  }
+  }, [clientList, findClientId, handleFetchCitiesData, setValue, check])
 
   const handleFetchClientData = useCallback(async () => {
     const responseClients = (await handleFetchClients({})) as ClientProps[]
+
+    setClientList(responseClients)
 
     const filter = responseClients.map((item) => {
       return {
@@ -64,14 +110,18 @@ export function FindClient({ check }: FindClientProps) {
     setListClients(filter)
   }, [handleFetchClients])
 
-  const handleFetchCitiesData = useCallback(
-    async (state: string) => {
-      const responseCities = (await handleFetchCitiesOfState(state)) as Option[]
-
-      setListCities(responseCities)
-    },
-    [handleFetchCitiesOfState],
-  )
+  function submit(data: ClientProps) {
+    if (selectedClientId) {
+      handleUpdateClient({ ...data, id: selectedClientId })
+    } else {
+      const id = uuidv4()
+      handleCreateClient({ ...data, id })
+      setSelectedClientId(id)
+    }
+    if (check) {
+      check(true)
+    }
+  }
 
   useEffect(() => {
     handleFetchClientData()
@@ -89,12 +139,23 @@ export function FindClient({ check }: FindClientProps) {
           <Select
             label="Buscar cliente"
             placeholder="Selecione um cliente"
-            value={selectedOption}
-            onChange={(e) => setSelectedOption(e.target.value)}
+            value={selectedClientId}
+            onChange={(e) => setFindClientId(e.target.value)}
             options={listClients}
           />
-          <Button title="Buscar" variant="dark" />
-          <Button title="Adicionar Pessoa" />
+          <Button
+            title="Buscar"
+            disabled={!findClientId}
+            variant="dark"
+            onClick={() => handleAutoCompleteClientData()}
+          />
+          <Button
+            title="Adicionar Pessoa"
+            disabled={!!selectedClientId}
+            onClick={() => {
+              handleSubmit(submit)()
+            }}
+          />
         </div>
       </div>
       <div className="h-[1px] bg-gray-300/50 my-7 max-w-[598px] md:max-w-full" />
@@ -114,6 +175,7 @@ export function FindClient({ check }: FindClientProps) {
               mask={cpfRegex}
               label="CPF"
               name="cpf"
+              value={getValues('cpf')}
               register={register}
               error={errors.cpf}
               onChange={(e) => setValue('cpf', e.currentTarget.value)}
@@ -124,6 +186,7 @@ export function FindClient({ check }: FindClientProps) {
               mask={rgRegex}
               label="IE/RG"
               name="rg"
+              value={getValues('rg')}
               register={register}
               error={errors.rg}
               onChange={(e) => setValue('rg', e.currentTarget.value)}
@@ -145,6 +208,7 @@ export function FindClient({ check }: FindClientProps) {
               mask={telePhoneRegex}
               label="Telefone"
               name="telePhone"
+              value={getValues('telePhone')}
               register={register}
               error={errors.telePhone}
               onChange={(e) => setValue('telePhone', e.currentTarget.value)}
@@ -155,6 +219,7 @@ export function FindClient({ check }: FindClientProps) {
               mask={cellPhoneRegex}
               label="Celular"
               name="cellPhone"
+              value={getValues('cellPhone')}
               register={register}
               error={errors.cellPhone}
               onChange={(e) => setValue('cellPhone', e.currentTarget.value)}
@@ -174,7 +239,7 @@ export function FindClient({ check }: FindClientProps) {
                 selected={field.value ? new Date(field.value) : null}
                 error={errors.dateOfBirth}
                 onChange={(date) => {
-                  field.onChange(date)
+                  field.onChange(handleFormattedDate(date))
                 }}
                 placeholderText="17/04/1995"
               />
@@ -227,8 +292,14 @@ export function FindClient({ check }: FindClientProps) {
             error={errors.gender}
           />
         </div>
+
         <div className="h-[1px] bg-gray-300/50 my-7 max-w-[598px] md:max-w-full" />
-        <Button title="Atualizar" className="max-w-[140px]" variant="outline" />
+        <Button
+          disabled={!selectedClientId}
+          title="Atualizar"
+          className="max-w-[140px]"
+          variant="outline"
+        />
       </form>
     </>
   )

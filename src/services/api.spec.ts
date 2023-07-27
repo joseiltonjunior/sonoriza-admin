@@ -32,7 +32,7 @@ describe('Check CRUD API', () => {
       rg: '987654321',
       issuingBody: 'SSP',
       cellPhone: '999999999',
-      telephone: '888888888',
+      telePhone: '888888888',
       dateOfBirth: '1990-01-01',
       nationality: 'Brazilian',
       stateOfBirth: 'SP',
@@ -62,7 +62,7 @@ it('should be able to edit an existing cliente', async () => {
       ...clientToEdit,
       name: 'Novo Nome',
       cellPhone: '99998888',
-      telephone: '77776666',
+      telePhone: '77776666',
     }
 
     const putResponse = await request(apiUrl)

@@ -35,6 +35,44 @@ export function useRequest() {
     [showToast],
   )
 
+  const handleUpdateClient = useCallback(
+    async (client: ClientProps) => {
+      try {
+        await clientAPI.put(`/clients/${client.id}`, client)
+
+        showToast('Cliente atualizado com sucesso', {
+          type: 'success',
+          theme: 'colored',
+        })
+      } catch {
+        showToast('Error ao editar cliente', {
+          type: 'error',
+          theme: 'colored',
+        })
+      }
+    },
+    [showToast],
+  )
+
+  const handleCreateClient = useCallback(
+    async (client: ClientProps) => {
+      try {
+        await clientAPI.post(`/clients`, client)
+
+        showToast('Cliente adicionado com sucesso', {
+          type: 'success',
+          theme: 'colored',
+        })
+      } catch {
+        showToast('Error ao adicionar cliente', {
+          type: 'error',
+          theme: 'colored',
+        })
+      }
+    },
+    [showToast],
+  )
+
   const handleFetchCitiesOfState = useCallback(
     async (state: string) => {
       return ibgeAPI
@@ -61,5 +99,10 @@ export function useRequest() {
     [showToast],
   )
 
-  return { handleFetchClients, handleFetchCitiesOfState }
+  return {
+    handleFetchClients,
+    handleFetchCitiesOfState,
+    handleUpdateClient,
+    handleCreateClient,
+  }
 }
