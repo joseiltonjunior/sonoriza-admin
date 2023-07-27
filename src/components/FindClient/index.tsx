@@ -25,7 +25,7 @@ import { handleFormattedDate } from '@/utils/formatDate'
 import { useFormContext } from '@/hooks/useForm'
 
 interface FindClientProps {
-  check?: React.Dispatch<React.SetStateAction<boolean>>
+  check: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export function FindClient({ check }: FindClientProps) {

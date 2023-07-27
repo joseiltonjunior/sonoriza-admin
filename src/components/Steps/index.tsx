@@ -8,6 +8,7 @@ import {
   setDecrementProgress,
   setIncrementProgress,
 } from '@/storage/modules/progress/action'
+import { AttachFile } from '../AttachFile'
 
 export function Steps() {
   const [checkClient, setCheckClient] = useState(false)
@@ -21,18 +22,17 @@ export function Steps() {
   return (
     <div className="bg-white rounded-2xl p-7 mt-8 top-5">
       {progress === 2 && <FindClient check={setCheckClient} />}
-      {progress === 3 && <>aaaaa</>}
+      {progress === 3 && <AttachFile />}
 
       <div className="h-[1px] bg-gray-300/50 my-7 max-w-[598px] md:max-w-full" />
       <div className="flex gap-4">
         <Button
-          disabled={!checkClient}
+          disabled={(!checkClient && progress === 2) || progress === 3}
           title="Continuar"
           className="max-w-[140px]"
           variant="green"
           type="button"
           onClick={() => {
-            console.log('oux')
             dispatch(setIncrementProgress())
           }}
         />
