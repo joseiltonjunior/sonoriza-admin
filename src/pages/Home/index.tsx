@@ -9,7 +9,7 @@ export function Home() {
 
       <h3 className="font-bold text-green-400 leading-8">Nova vendas</h3>
 
-      <Progress currentIndex={2} />
+      <Progress />
 
       <Total value={114.75} />
 

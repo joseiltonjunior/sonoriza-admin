@@ -22,12 +22,15 @@ import { Option } from '@/types/optionSelect'
 import { useRequest } from '@/hooks/useRequests'
 import { DatePickerCustom } from '../form/DatePicker'
 import { handleFormattedDate } from '@/utils/formatDate'
+import { useFormContext } from '@/hooks/useForm'
 
 interface FindClientProps {
   check?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export function FindClient({ check }: FindClientProps) {
+  const { formData, updateFormData } = useFormContext()
+
   const {
     register,
     setValue,
@@ -36,12 +39,7 @@ export function FindClient({ check }: FindClientProps) {
     control,
     formState: { errors },
   } = useForm<ClientProps>({
-    defaultValues: {
-      stateOfBirth: '',
-      cityOfBirth: '',
-      maritalStatus: '',
-      gender: '',
-    },
+    defaultValues: formData,
     resolver: yupResolver(clientSchema),
   })
 
@@ -89,11 +87,20 @@ export function FindClient({ check }: FindClientProps) {
       setValue('telePhone', filterClient.telePhone)
       setValue('stateOfBirth', filterClient.stateOfBirth)
 
+      updateFormData(filterClient)
+
       if (check) {
         check(true)
       }
     }
-  }, [clientList, findClientId, handleFetchCitiesData, setValue, check])
+  }, [
+    clientList,
+    findClientId,
+    handleFetchCitiesData,
+    setValue,
+    updateFormData,
+    check,
+  ])
 
   const handleFetchClientData = useCallback(async () => {
     const responseClients = (await handleFetchClients({})) as ClientProps[]
@@ -112,11 +119,15 @@ export function FindClient({ check }: FindClientProps) {
 
   function submit(data: ClientProps) {
     if (selectedClientId) {
-      handleUpdateClient({ ...data, id: selectedClientId })
+      const client = { ...data, id: selectedClientId }
+      handleUpdateClient(client)
+      updateFormData(client)
     } else {
       const id = uuidv4()
-      handleCreateClient({ ...data, id })
+      const client = { ...data, id }
+      handleCreateClient(client)
       setSelectedClientId(id)
+      updateFormData(client)
     }
     if (check) {
       check(true)
@@ -124,8 +135,19 @@ export function FindClient({ check }: FindClientProps) {
   }
 
   useEffect(() => {
+    if (formData.id) {
+      handleFetchCitiesData(formData.stateOfBirth)
+      setSelectedClientId(formData.id)
+    }
     handleFetchClientData()
-  }, [handleFetchClientData])
+  }, [
+    formData,
+    formData.id,
+    formData.stateOfBirth,
+    handleFetchCitiesData,
+    handleFetchClientData,
+    selectedClientId,
+  ])
 
   return (
     <>
@@ -139,8 +161,10 @@ export function FindClient({ check }: FindClientProps) {
           <Select
             label="Buscar cliente"
             placeholder="Selecione um cliente"
-            value={selectedClientId}
-            onChange={(e) => setFindClientId(e.target.value)}
+            value={findClientId}
+            onChange={(e) => {
+              setFindClientId(e.target.value)
+            }}
             options={listClients}
           />
           <Button
