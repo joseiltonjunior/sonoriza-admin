@@ -2,17 +2,17 @@
   "clients": [
     {
       "stateOfBirth": "PE",
-      "cityOfBirth": "Recife",
-      "maritalStatus": "solteiro",
       "gender": "masculino",
-      "name": "John Doe",
-      "cpf": "333.223.322-33",
-      "rg": "31.268.108-2",
-      "issuingBody": "SDS",
-      "telePhone": "(81) 3033-0332",
+      "maritalStatus": "solteiro",
       "cellPhone": "(81) 99522-3322",
+      "cityOfBirth": "Recife",
+      "cpf": "333.223.322-33",
       "dateOfBirth": "2000-03-13",
+      "issuingBody": "SDS",
+      "name": "John Doe",
       "nationality": "Brasileiro",
+      "rg": "31.268.108-2",
+      "telePhone": "(81) 3033-0332",
       "id": "04b77eef-4677-4f12-9495-8623546f5469"
     }
   ]

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Button } from '../Button'
-import { Select } from '../form/Select'
-import { Input } from '../form/Input'
+import { Button } from '@/components/Button'
+import { Select } from '@/components/form/Select'
+import { Input } from '@/components/form/Input'
 import { Controller, useForm } from 'react-hook-form'
 import { ClientProps } from '@/types/client'
 import { v4 as uuidv4 } from 'uuid'
@@ -20,9 +20,10 @@ import { genderOptions } from '@/utils/genderOptions'
 
 import { Option } from '@/types/optionSelect'
 import { useRequest } from '@/hooks/useRequests'
-import { DatePickerCustom } from '../form/DatePicker'
+import { DatePickerCustom } from '@/components/form/DatePicker'
 import { handleFormattedDate } from '@/utils/formatDate'
 import { useFormContext } from '@/hooks/useForm'
+import { useTranslation } from 'react-i18next'
 
 interface FindClientProps {
   check: React.Dispatch<React.SetStateAction<boolean>>
@@ -30,6 +31,8 @@ interface FindClientProps {
 
 export function FindClient({ check }: FindClientProps) {
   const { formData, updateFormData } = useFormContext()
+
+  const { t } = useTranslation()
 
   const {
     register,
@@ -153,14 +156,14 @@ export function FindClient({ check }: FindClientProps) {
     <>
       <div className="max-w-[562px] md:max-w-full">
         <div>
-          <h1 className="font-bold text-lg">Buscar cliente</h1>
+          <h1 className="font-bold text-lg">{t('findClient.title')}</h1>
           <div className="bg-green-400 rounded-3xl h-1 w-6" />
         </div>
 
         <div className="grid md:grid-cols-1 grid-cols-[318px,80px,140px] gap-4 items-end">
           <Select
-            label="Buscar cliente"
-            placeholder="Selecione um cliente"
+            label={t('findClient.findClient')}
+            placeholder={t('findClient.select')}
             value={findClientId}
             onChange={(e) => {
               setFindClientId(e.target.value)
@@ -168,13 +171,13 @@ export function FindClient({ check }: FindClientProps) {
             options={listClients}
           />
           <Button
-            title="Buscar"
+            title={t('findClient.buttonFetch')}
             disabled={!findClientId}
             variant="dark"
             onClick={() => handleAutoCompleteClientData()}
           />
           <Button
-            title="Adicionar Pessoa"
+            title={t('findClient.buttonAdd')}
             disabled={!!selectedClientId}
             onClick={() => {
               handleSubmit(submit)()
@@ -187,7 +190,7 @@ export function FindClient({ check }: FindClientProps) {
         <div className="max-w-[410px] md:max-w-full">
           <Input
             placeholder="Antônio José dos Santos"
-            label="Nome completo"
+            label={t('findClient.name')}
             name="name"
             register={register}
             error={errors.name}
@@ -218,7 +221,7 @@ export function FindClient({ check }: FindClientProps) {
 
             <Input
               placeholder="SSP"
-              label="Órgão emissor"
+              label={t('findClient.issuingBody')}
               name="issuingBody"
               maxLength={3}
               register={register}
@@ -230,7 +233,7 @@ export function FindClient({ check }: FindClientProps) {
             <Input
               placeholder="(11) 0000-0000"
               mask={telePhoneRegex}
-              label="Telefone"
+              label={t('findClient.telephone')}
               name="telePhone"
               value={getValues('telePhone')}
               register={register}
@@ -241,7 +244,7 @@ export function FindClient({ check }: FindClientProps) {
             <Input
               placeholder="(11) 00000-0000"
               mask={cellPhoneRegex}
-              label="Celular"
+              label={t('findClient.cellPhone')}
               name="cellPhone"
               value={getValues('cellPhone')}
               register={register}
@@ -257,7 +260,7 @@ export function FindClient({ check }: FindClientProps) {
             control={control}
             render={({ field }) => (
               <DatePickerCustom
-                label="Data de nascimento"
+                label={t('findClient.dateOfBirth')}
                 name="dateOfBirth"
                 register={register}
                 selected={field.value ? new Date(field.value) : null}
@@ -272,7 +275,7 @@ export function FindClient({ check }: FindClientProps) {
 
           <Input
             placeholder="Brasileira"
-            label="Nacionalidade"
+            label={t('findClient.nationality')}
             name="nationality"
             register={register}
             error={errors.nationality}
@@ -280,37 +283,37 @@ export function FindClient({ check }: FindClientProps) {
         </div>
         <div className="max-w-[298px] md:max-w-full">
           <Select
-            placeholder="Selecione"
+            placeholder={t('findClient.select')}
             options={optionsStatesOfBrazil}
-            label="Estado de nascimento"
+            label={t('findClient.stateOfBirth')}
             name="stateOfBirth"
             register={register}
             error={errors.stateOfBirth}
             onChange={(e) => handleFetchCitiesData(e.target.value)}
           />
           <Select
-            placeholder="Selecione"
+            placeholder={t('findClient.select')}
             options={listCities}
             name="cityOfBirth"
             register={register}
-            label="Naturalidade (Cidade de nascimento)"
+            label={t('findClient.cityOfBirth')}
             error={errors.cityOfBirth}
           />
         </div>
         <div className="h-[1px] bg-gray-300/50 my-7 max-w-[598px] md:max-w-full" />
         <div className="max-w-[211px] md:max-w-full">
           <Select
-            placeholder="Selecione"
-            label="Estado civil"
+            placeholder={t('findClient.select')}
+            label={t('findClient.maritalStatus')}
             name="maritalStatus"
             register={register}
             options={maritalStatusOptions}
             error={errors.maritalStatus}
           />
           <Select
-            placeholder="Selecione"
+            placeholder={t('findClient.select')}
             options={genderOptions}
-            label="Sexo"
+            label={t('findClient.gender')}
             name="gender"
             register={register}
             error={errors.gender}
@@ -320,7 +323,7 @@ export function FindClient({ check }: FindClientProps) {
         <div className="h-[1px] bg-gray-300/50 my-7 max-w-[598px] md:max-w-full" />
         <Button
           disabled={!selectedClientId}
-          title="Atualizar"
+          title={t('findClient.buttonAtt')}
           className="max-w-[140px]"
           variant="outline"
         />

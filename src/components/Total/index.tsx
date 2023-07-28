@@ -1,4 +1,5 @@
 import arrow from '@/assets/arrow-strong.svg'
+import { useTranslation } from 'react-i18next'
 
 interface TotalProps {
   value: number
@@ -10,11 +11,13 @@ export function Total({ value }: TotalProps) {
     currency: 'BRL',
   })
 
+  const { t } = useTranslation()
+
   return (
     <div className="bg-white mt-8 rounded-2xl h-[3.2rem] items-center justify-end flex overflow-hidden">
       <div className="flex bg-blue-600 w-[19.063rem] md:w-full h-full items-center rounded-2xl px-5 justify-between">
         <div className="flex gap-7">
-          <p className="text-white font-bold">Subtotal</p>
+          <p className="text-white font-bold">{t('total.title')}</p>
           <p className="text-green-400 font-semibold">{valorFormatado}</p>
         </div>
 

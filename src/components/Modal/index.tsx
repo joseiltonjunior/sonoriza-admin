@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useModal } from '../../hooks/useModal'
 import { Button } from '../Button'
 
@@ -7,7 +8,7 @@ export function Modal() {
     modalState: { visible, description, title, confirm },
   } = useModal()
 
-  console.log(visible)
+  const { t } = useTranslation()
 
   return (
     <div
@@ -33,12 +34,12 @@ export function Modal() {
             onClick={closeModal}
             className="text-blue-600 underline text-sm font-normal hover:text-blue-600/90"
           >
-            voltar
+            {t('buttonBack')}
           </button>
           <Button
             className="w-[93px]"
             variant="red"
-            title="Exluir"
+            title={t('buttonDelete')}
             onClick={() => {
               if (confirm) confirm()
               closeModal()

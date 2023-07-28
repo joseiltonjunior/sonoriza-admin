@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '../Button'
-import { FindClient } from '../FindClient'
+import { FindClient } from './FindClient'
 import { useDispatch, useSelector } from 'react-redux'
 import { ReduxProps } from '@/storage'
 import { ProgressProps } from '@/storage/modules/progress/type'
@@ -8,7 +8,8 @@ import {
   setDecrementProgress,
   setIncrementProgress,
 } from '@/storage/modules/progress/action'
-import { AttachFile } from '../AttachFile'
+import { AttachFile } from './AttachFile'
+import { useTranslation } from 'react-i18next'
 
 export function Steps() {
   const [checkClient, setCheckClient] = useState(false)
@@ -19,6 +20,8 @@ export function Steps() {
 
   const dispatch = useDispatch()
 
+  const { t } = useTranslation()
+
   return (
     <div className="bg-white rounded-2xl p-7 mt-8 top-5">
       {progress === 2 && <FindClient check={setCheckClient} />}
@@ -28,7 +31,7 @@ export function Steps() {
       <div className="flex gap-4">
         <Button
           disabled={(!checkClient && progress === 2) || progress === 3}
-          title="Continuar"
+          title={t('buttonContinue')}
           className="max-w-[140px]"
           variant="green"
           type="button"
@@ -42,7 +45,7 @@ export function Steps() {
           type="button"
           onClick={() => dispatch(setDecrementProgress())}
         >
-          Voltar
+          {t('buttonBack')}
         </button>
       </div>
     </div>

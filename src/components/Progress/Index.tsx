@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux'
 import { Item } from './Item'
 import { ReduxProps } from '@/storage'
 import { ProgressProps } from '@/storage/modules/progress/type'
+import { useTranslation } from 'react-i18next'
 
 export function Progress() {
   const items = [
@@ -17,14 +18,16 @@ export function Progress() {
     (state) => state.progress,
   )
 
+  const { t } = useTranslation()
+
   return (
     <div className="flex rounded-2xl overflow-hidden bg-transparent mt-8">
       <div className="flex md:hidden flex-1 items-center justify-between">
-        <Item index={1} title="Produto" currentIndex={progress} />
-        <Item index={2} title="Cliente" currentIndex={progress} />
-        <Item index={3} title="Anexar arquivo" currentIndex={progress} />
-        <Item index={4} title="Pagamentos" currentIndex={progress} />
-        <Item index={5} title="Contrato" currentIndex={progress} />
+        <Item index={1} title={t('progress.first')} currentIndex={progress} />
+        <Item index={2} title={t('progress.second')} currentIndex={progress} />
+        <Item index={3} title={t('progress.third')} currentIndex={progress} />
+        <Item index={4} title={t('progress.fourth')} currentIndex={progress} />
+        <Item index={5} title={t('progress.fifth')} currentIndex={progress} />
       </div>
 
       <div className="w-full hidden md:block">

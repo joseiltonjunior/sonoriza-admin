@@ -7,6 +7,7 @@ import pdf from '@/assets/pdf.png'
 import png from '@/assets/png.png'
 import { useToast } from '@/hooks/useToast'
 import { useModal } from '@/hooks/useModal'
+import { useTranslation } from 'react-i18next'
 
 interface FileWithType extends File {
   type: string
@@ -22,6 +23,7 @@ export function AttachFile({ check }: AttachFileProps) {
 
   const { showToast } = useToast()
   const { openModal } = useModal()
+  const { t } = useTranslation()
 
   function handleDrop(e: DragEvent<HTMLDivElement>) {
     e.preventDefault()
@@ -106,7 +108,7 @@ export function AttachFile({ check }: AttachFileProps) {
   return (
     <div className="max-w-[427px] md:max-w-full">
       <div>
-        <h1 className="font-bold text-lg">Anexar arquivos</h1>
+        <h1 className="font-bold text-lg">{t('attachFile.title')}</h1>
         <div className="bg-green-400 rounded-3xl h-1 w-6" />
 
         {files.length > 0 && (
@@ -134,9 +136,8 @@ export function AttachFile({ check }: AttachFileProps) {
                     type="button"
                     onClick={() => {
                       openModal({
-                        title: 'Tem certeza que deseja excluir este arquivo?',
-                        description:
-                          'As mudanças serão salvas e a ação não poderá ser desfeita.',
+                        title: t('modal.title'),
+                        description: t('modal.description'),
                         confirm() {
                           handleRemoveFile(index)
                         },
@@ -159,13 +160,12 @@ export function AttachFile({ check }: AttachFileProps) {
           onClick={handleClickableArea}
         >
           <div className="text-center">
-            <p className="font-normal text-[13px] text-[#404554]">
-              Arraste para dentro ou{' '}
-              <strong className="text-blue-600">clique</strong> para selecionar
-              um arquivo
-            </p>
+            <p
+              className="font-normal text-[13px] text-[#404554]"
+              dangerouslySetInnerHTML={{ __html: t('attachFile.info') }}
+            />
             <span className="font-normal text-xs text-[#9EA1B0]">
-              Formatos suportados: PDF, Word, JPG, XLS e PNG
+              {t('attachFile.description')}
             </span>
           </div>
           <div className="border p-1 border-blue-400 rounded-full">
