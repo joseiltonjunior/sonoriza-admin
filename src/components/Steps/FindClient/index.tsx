@@ -117,8 +117,8 @@ export function FindClient({ check }: FindClientProps) {
       }
     })
 
-    setListClients(filter)
-  }, [handleFetchClients])
+    setListClients([{ label: t('findClient.noOption'), value: '' }, ...filter])
+  }, [handleFetchClients, t])
 
   function submit(data: ClientProps) {
     if (selectedClientId) {

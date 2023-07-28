@@ -4,6 +4,7 @@ interface ModalInfoProps {
   description: string
   confirm: () => void
   title: string
+  singleButton?: boolean
 }
 
 interface ModalStateProps extends ModalInfoProps {

@@ -6,7 +6,7 @@ import { findClientByCpf } from '@/utils/tests/findClientByCpf'
 
 describe('Check CRUD API', () => {
   it('slould be able to fetch many clients', async () => {
-    const apiUrl = import.meta.env.VITE_API_URL
+    const apiUrl = 'http://localhost:3001'
 
     const response = await request(apiUrl).get('/clients').send()
 
@@ -23,7 +23,7 @@ describe('Check CRUD API', () => {
   })
 
   it('should be able to add a new cliente', async () => {
-    const apiUrl = import.meta.env.VITE_API_URL
+    const apiUrl = 'http://localhost:3001'
 
     const newClient: ClientProps = {
       id: uuidv4(),
@@ -51,7 +51,7 @@ describe('Check CRUD API', () => {
 })
 
 it('should be able to edit an existing cliente', async () => {
-  const apiUrl = import.meta.env.VITE_API_URL
+  const apiUrl = 'http://localhost:3001'
 
   const clientToEdit = await findClientByCpf('123.456.789-00')
 
@@ -77,7 +77,7 @@ it('should be able to edit an existing cliente', async () => {
 })
 
 it('should be able to delete an existing cliente', async () => {
-  const apiUrl = import.meta.env.VITE_API_URL
+  const apiUrl = 'http://localhost:3001'
 
   const clientToDelete = await findClientByCpf('123.456.789-00')
 

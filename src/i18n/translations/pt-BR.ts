@@ -18,6 +18,7 @@ export const TRANSLATION_PT_BR = {
     title: 'Buscar cliente',
     findClient: 'Buscar cliente',
     select: 'Selecione',
+    noOption: 'Nenhuma opção',
     buttonFetch: 'Buscar',
     buttonAdd: 'Adicionar Pessoa',
     buttonAtt: 'Atualizar',
@@ -46,5 +47,11 @@ export const TRANSLATION_PT_BR = {
   modal: {
     title: 'Tem certeza que deseja excluir este arquivo?',
     description: 'As mudanças serão salvas e a ação não poderá ser desfeita.',
+  },
+
+  modalAcknowledgment: {
+    title: 'Obrigado pela oportunidade!!',
+    description:
+      'Foi um verdadeiro desafio, mas pude aprender e aplicar uma variedade de conhecimentos na prática. Espero que apreciem os resultados. Até breve!',
   },
 }

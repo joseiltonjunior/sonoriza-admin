@@ -18,6 +18,7 @@ export const TRANSLATION_EN_US = {
     title: 'Find client',
     findClient: 'Find client',
     select: 'Select',
+    noOption: 'No option',
     buttonFetch: 'Find',
     buttonAdd: 'Add Person',
     buttonAtt: 'Update',
@@ -46,5 +47,11 @@ export const TRANSLATION_EN_US = {
   modal: {
     title: 'Are you sure you want to delete this file?',
     description: 'Changes will be saved and action cannot be undone.',
+  },
+
+  modalAcknowledgment: {
+    title: 'Thank you for the opportunity!!',
+    description:
+      'It was a real challenge, but I was able to learn and apply a variety of knowledge in practice. I hope you appreciate the results. See you soon!',
   },
 }
