@@ -7,7 +7,7 @@ export function Home() {
     <div className="max-w-3xl">
       <h1 className="font-bold text-blue-600 leading-6">Vendas</h1>
 
-      <h3 className="font-bold text-green-400 leading-8">Nova vendas</h3>
+      <h3 className="font-bold text-green-400 leading-8 text-xl">Nova venda</h3>
 
       <Progress />
 

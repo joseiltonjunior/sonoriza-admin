@@ -48,6 +48,10 @@
         @apply bg-green-400 hover:bg-green-400/90
     }
 
+    .button-red {
+        @apply bg-rose-600 hover:bg-rose-600/90
+    }
+
     .button-blue {
         @apply bg-blue-400 hover:bg-blue-400/90
     }

@@ -37,6 +37,7 @@ export function Steps() {
           }}
         />
         <button
+          disabled={progress === 2}
           className="text-blue-600 underline text-sm font-bold hover:text-blue-600/90"
           type="button"
           onClick={() => dispatch(setDecrementProgress())}

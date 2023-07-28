@@ -1,12 +1,14 @@
 import { PropsWithChildren } from 'react'
 import { Header } from './Header'
 import { Aside } from './Aside'
+import { Modal } from '../Modal'
 
 interface LayoutProps extends PropsWithChildren {}
 
 export function Layout({ children }: LayoutProps) {
   return (
     <>
+      <Modal />
       <Header />
       <div className="pt-20 flex h-full ">
         <Aside />

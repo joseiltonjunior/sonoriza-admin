@@ -5,6 +5,8 @@ import trash from '@/assets/trash.svg'
 import doc from '@/assets/doc.png'
 import pdf from '@/assets/pdf.png'
 import png from '@/assets/png.png'
+import { useToast } from '@/hooks/useToast'
+import { useModal } from '@/hooks/useModal'
 
 interface FileWithType extends File {
   type: string
@@ -18,6 +20,9 @@ export function AttachFile({ check }: AttachFileProps) {
   const [files, setFiles] = useState<FileWithType[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const { showToast } = useToast()
+  const { openModal } = useModal()
+
   function handleDrop(e: DragEvent<HTMLDivElement>) {
     e.preventDefault()
     const newFiles = Array.from(e.dataTransfer.files).filter((file) =>
@@ -29,7 +34,15 @@ export function AttachFile({ check }: AttachFileProps) {
         'application/vnd.ms-excel',
       ].includes(file.type),
     ) as FileWithType[]
-    setFiles((prevFiles) => [...prevFiles, ...newFiles])
+
+    if (newFiles.length === 0) {
+      showToast('Tipo de arquivo não suportado!', {
+        type: 'error',
+        theme: 'colored',
+      })
+    } else {
+      setFiles((prevFiles) => [...prevFiles, ...newFiles])
+    }
   }
 
   function handleFileInputChange(e: ChangeEvent<HTMLInputElement>) {
@@ -119,7 +132,16 @@ export function AttachFile({ check }: AttachFileProps) {
 
                   <button
                     type="button"
-                    onClick={() => handleRemoveFile(index)}
+                    onClick={() => {
+                      openModal({
+                        title: 'Tem certeza que deseja excluir este arquivo?',
+                        description:
+                          'As mudanças serão salvas e a ação não poderá ser desfeita.',
+                        confirm() {
+                          handleRemoveFile(index)
+                        },
+                      })
+                    }}
                     className="ml-auto"
                   >
                     <img src={trash} alt="remove item" />
