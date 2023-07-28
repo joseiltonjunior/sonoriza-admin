@@ -1,0 +1,77 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+
+@layer base {
+
+    *,
+    ::before,
+    ::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        background-color: #F0F4F5;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    body::-webkit-scrollbar {
+        width: 0.4rem;
+    }
+
+    body::-webkit-scrollbar-thumb {
+        background: #63D391;
+    }
+
+    body,
+    input,
+    textarea,
+    button {
+        font-family: 'Baloo 2', sans-serif;
+        color: #205266;
+        font-weight: 400;
+    }
+
+}
+
+/* data-[variant=green]:bg-green-400 data-[variant=green]:hover:bg-green/90 data-[variant=blue]:bg-blue-400 data-[variant=blue]:hover:bg-blue-400/90 data-[variant=dark]:bg-blue-600 data-[variant=dark]:hover:bg-blue-600/90 data-[variant=outline]:bg-transparent data-[variant=outline]:hover:bg-blue-400/90 */
+
+@layer components {
+    .button-outline {
+        @apply bg-transparent border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white disabled:bg-transparent disabled:border-blue-600/40 disabled:text-blue-600/40 disabled:hover:bg-transparent disabled:hover:text-blue-600/40
+    }
+
+    .button-green {
+        @apply bg-green-400 hover:bg-green-400/90
+    }
+
+    .button-red {
+        @apply bg-rose-600 hover:bg-rose-600/90
+    }
+
+    .button-blue {
+        @apply bg-blue-400 hover:bg-blue-400/90
+    }
+
+    .button-blue-dark {
+        @apply bg-blue-600 hover:bg-blue-600/90
+    }
+
+    .progress-item-mobile {
+        @apply p-0 m-0 bg-green-400 text-white text-base rounded-2xl !important;
+    }
+
+    .before-current-progress {
+        @apply bg-green-400 text-white z-20 rounded-r-2xl;
+    }
+
+    .current-progress {
+        @apply bg-blue-400 text-white z-10 rounded-r-2xl;
+    }
+
+
+
+}

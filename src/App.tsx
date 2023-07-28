@@ -1,12 +1,12 @@
-
+import { Home } from './pages/Home'
+import './index.css'
+import { Layout } from './components/Layout'
 
 function App() {
-  
-
   return (
-    <>
-      <div>hello world!</div>
-    </>
+    <Layout>
+      <Home />
+    </Layout>
   )
 }
 
