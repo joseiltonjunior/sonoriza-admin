@@ -1,0 +1,36 @@
+name: Run E2E Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-e2e-tests:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  
+          registry-url: 'https://registry.npmjs.org/'  
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build the project
+        run: yarn build
+
+      - name: Start the server for E2E tests
+        run: yarn serve & 
+
+      - name: Run E2E tests
+        run: yarn test
+
+      - name: Stop the server
+        run: kill $(lsof -t -i:3000) $(lsof -t -i:3001)

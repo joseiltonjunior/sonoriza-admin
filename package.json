@@ -12,8 +12,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e:watch": "vitest",
-    "test:e2e": "vitest run",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
