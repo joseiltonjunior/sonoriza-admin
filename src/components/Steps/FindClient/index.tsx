@@ -30,7 +30,7 @@ interface FindClientProps {
 }
 
 export function FindClient({ check }: FindClientProps) {
-  const { formData, updateFormData } = useFormContext()
+  const { formData, updateFormData, resetFormContext } = useFormContext()
 
   const { t } = useTranslation()
 
@@ -39,6 +39,7 @@ export function FindClient({ check }: FindClientProps) {
     setValue,
     getValues,
     handleSubmit,
+    reset,
     control,
     formState: { errors },
   } = useForm<ClientProps>({
@@ -117,8 +118,8 @@ export function FindClient({ check }: FindClientProps) {
       }
     })
 
-    setListClients([{ label: t('findClient.noOption'), value: '' }, ...filter])
-  }, [handleFetchClients, t])
+    setListClients(filter)
+  }, [handleFetchClients])
 
   function submit(data: ClientProps) {
     if (selectedClientId) {
@@ -186,7 +187,24 @@ export function FindClient({ check }: FindClientProps) {
         </div>
       </div>
       <div className="h-[1px] bg-gray-300/50 my-7 max-w-[598px] md:max-w-full" />
-      <form onSubmit={handleSubmit(submit)}>
+      <form
+        onSubmit={handleSubmit(submit)}
+        className="relative max-w-[598px] md:max-w-full"
+      >
+        {selectedClientId && (
+          <button
+            className="absolute right-0 text-rose-500 hover:underline"
+            type="button"
+            onClick={() => {
+              setSelectedClientId('')
+              setFindClientId('')
+              resetFormContext()
+              reset()
+            }}
+          >
+            {t('cleanForm')}
+          </button>
+        )}
         <div className="max-w-[410px] md:max-w-full">
           <Input
             placeholder="Antônio José dos Santos"
@@ -254,7 +272,8 @@ export function FindClient({ check }: FindClientProps) {
           </div>
         </div>
         <div className="h-[1px] bg-gray-300/50 my-7 max-w-[598px] md:max-w-full" />
-        <div className="max-w-[130px] md:max-w-full">
+
+        <div className="max-w-[130px] md:max-w-none w-full ">
           <Controller
             name="dateOfBirth"
             control={control}

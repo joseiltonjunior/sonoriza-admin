@@ -37,8 +37,6 @@
 
 }
 
-/* data-[variant=green]:bg-green-400 data-[variant=green]:hover:bg-green/90 data-[variant=blue]:bg-blue-400 data-[variant=blue]:hover:bg-blue-400/90 data-[variant=dark]:bg-blue-600 data-[variant=dark]:hover:bg-blue-600/90 data-[variant=outline]:bg-transparent data-[variant=outline]:hover:bg-blue-400/90 */
-
 @layer components {
     .button-outline {
         @apply bg-transparent border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white disabled:bg-transparent disabled:border-blue-600/40 disabled:text-blue-600/40 disabled:hover:bg-transparent disabled:hover:text-blue-600/40
