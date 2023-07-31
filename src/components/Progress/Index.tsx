@@ -35,7 +35,6 @@ export function Progress() {
           index={items.find((item) => item.index === progress)?.index ?? 1}
           title={items.find((item) => item.index === progress)?.name ?? ''}
           currentIndex={progress}
-          // className="bg-red-500"
         />
 
         <div className="flex w-full justify-center mt-1">

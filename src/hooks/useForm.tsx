@@ -6,6 +6,7 @@ interface FormData extends ClientProps {}
 interface FormContextData {
   formData: ClientProps
   updateFormData: (data: ClientProps) => void
+  resetFormContext: () => void
 }
 
 const FormContext = createContext<FormContextData | undefined>(undefined)
@@ -37,8 +38,27 @@ export function FormProvider({ children }: FormProviderProps) {
     }))
   }
 
+  const resetFormContext = () => {
+    setFormData({
+      stateOfBirth: '',
+      gender: '',
+      maritalStatus: '',
+      cellPhone: '',
+      cityOfBirth: '',
+      cpf: '',
+      dateOfBirth: '',
+      issuingBody: '',
+      name: '',
+      nationality: '',
+      rg: '',
+      telePhone: '',
+    })
+  }
+
   return (
-    <FormContext.Provider value={{ formData, updateFormData }}>
+    <FormContext.Provider
+      value={{ formData, updateFormData, resetFormContext }}
+    >
       {children}
     </FormContext.Provider>
   )

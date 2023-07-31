@@ -54,4 +54,21 @@ export const TRANSLATION_EN_US = {
     description:
       'It was a real challenge, but I was able to learn and apply a variety of knowledge in practice. I hope you appreciate the results. See you soon!',
   },
+
+  calendar: {
+    january: 'January',
+    february: 'February',
+    march: 'March',
+    april: 'April',
+    may: 'May',
+    june: 'June',
+    july: 'July',
+    august: 'August',
+    september: 'September',
+    october: 'October',
+    november: 'November',
+    december: 'December',
+  },
+
+  cleanForm: 'Clean form',
 }
