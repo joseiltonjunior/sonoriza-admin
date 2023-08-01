@@ -39,7 +39,6 @@ export function FindClient({ check }: FindClientProps) {
     setValue,
     getValues,
     handleSubmit,
-    reset,
     control,
     formState: { errors },
   } = useForm<ClientProps>({
@@ -199,7 +198,18 @@ export function FindClient({ check }: FindClientProps) {
               setSelectedClientId('')
               setFindClientId('')
               resetFormContext()
-              reset()
+              setValue('name', '')
+              setValue('cellPhone', '')
+              setValue('cityOfBirth', '')
+              setValue('dateOfBirth', '')
+              setValue('gender', '')
+              setValue('issuingBody', '')
+              setValue('maritalStatus', '')
+              setValue('nationality', '')
+              setValue('cpf', '')
+              setValue('rg', '')
+              setValue('telePhone', '')
+              setValue('stateOfBirth', '')
             }}
           >
             {t('cleanForm')}
