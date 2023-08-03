@@ -4,7 +4,6 @@ import { Select } from '@/components/form/Select'
 import { Input } from '@/components/form/Input'
 import { Controller, useForm } from 'react-hook-form'
 import { ClientProps } from '@/types/client'
-import { v4 as uuidv4 } from 'uuid'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 import { clientSchema } from './clientSchema'
@@ -60,6 +59,8 @@ export function FindClient({ check }: FindClientProps) {
   const [listClients, setListClients] = useState<Option[]>()
   const [clientList, setClientList] = useState<ClientProps[]>()
 
+  const [isLoading, setIsLoading] = useState(false)
+
   const handleFetchCitiesData = useCallback(
     async (state: string) => {
       const responseCities = (await handleFetchCitiesOfState(state)) as Option[]
@@ -106,32 +107,35 @@ export function FindClient({ check }: FindClientProps) {
   ])
 
   const handleFetchClientData = useCallback(async () => {
-    const responseClients = (await handleFetchClients({})) as ClientProps[]
+    const responseClients = await handleFetchClients()
 
-    setClientList(responseClients)
+    if (responseClients) {
+      setClientList(responseClients)
+      const filter = responseClients.map((item) => {
+        return {
+          value: String(item.id),
+          label: item.name,
+        }
+      })
 
-    const filter = responseClients.map((item) => {
-      return {
-        value: String(item.id),
-        label: item.name,
-      }
-    })
-
-    setListClients(filter)
+      setListClients(filter)
+    }
   }, [handleFetchClients])
 
-  function submit(data: ClientProps) {
+  async function submit(data: ClientProps) {
+    setIsLoading(true)
     if (selectedClientId) {
       const client = { ...data, id: selectedClientId }
-      handleUpdateClient(client)
+      handleUpdateClient({ clientId: selectedClientId, updateClient: data })
       updateFormData(client)
     } else {
-      const id = uuidv4()
-      const client = { ...data, id }
-      handleCreateClient(client)
-      setSelectedClientId(id)
-      updateFormData(client)
+      const response = await handleCreateClient(data)
+      if (response) {
+        setSelectedClientId(response.id)
+        updateFormData(data)
+      }
     }
+    setIsLoading(false)
     if (check) {
       check(true)
     }
@@ -177,6 +181,7 @@ export function FindClient({ check }: FindClientProps) {
             onClick={() => handleAutoCompleteClientData()}
           />
           <Button
+            isLoading={isLoading}
             title={t('findClient.buttonAdd')}
             disabled={!!selectedClientId}
             onClick={() => {
@@ -355,6 +360,7 @@ export function FindClient({ check }: FindClientProps) {
           title={t('findClient.buttonAtt')}
           className="max-w-[140px]"
           variant="outline"
+          isLoading={isLoading}
         />
       </form>
     </>

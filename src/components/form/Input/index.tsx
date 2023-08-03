@@ -1,5 +1,5 @@
 import { ClientProps } from '@/types/client'
-
+import { twMerge } from 'tailwind-merge'
 import { ComponentProps } from 'react'
 import { FieldError, UseFormRegister } from 'react-hook-form'
 import MaskedInput from 'react-text-mask'
@@ -11,7 +11,8 @@ interface InputProps extends ComponentProps<'input'> {
   placeholder?: string
   label: string
 
-  register: UseFormRegister<ClientProps>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  register: UseFormRegister<any>
   mask?: InputMask[]
 }
 
@@ -20,6 +21,7 @@ export function Input({
   error,
   register,
   placeholder,
+  className,
   name,
   mask,
   onChange,
@@ -37,7 +39,10 @@ export function Input({
           guide={false}
           data-is-error={!!error}
           placeholder={placeholder}
-          className="w-full bg-white border border-gray-300 rounded px-4 py-2 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 text-sm font-normal data-[is-error=true]:border-red-600"
+          className={twMerge(
+            'w-full bg-white border border-gray-300 rounded px-4 py-2 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 text-sm font-normal data-[is-error=true]:border-red-600',
+            className,
+          )}
         />
       ) : (
         <input
@@ -45,7 +50,10 @@ export function Input({
           data-is-error={!!error}
           placeholder={placeholder}
           type="text"
-          className="w-full bg-white border border-gray-300 rounded px-4 py-2 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 text-sm font-normal data-[is-error=true]:border-red-600"
+          className={twMerge(
+            'w-full bg-white border border-gray-300 rounded px-4 py-2 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 text-sm font-normal data-[is-error=true]:border-red-600',
+            className,
+          )}
           {...rest}
         />
       )}

@@ -3,13 +3,15 @@ import { Header } from './Header'
 import { Aside } from './Aside'
 import { Modal } from '../Modal'
 
-interface LayoutProps extends PropsWithChildren {}
+interface LayoutProps extends PropsWithChildren {
+  isError?: boolean
+}
 
-export function Layout({ children }: LayoutProps) {
+export function Layout({ children, isError }: LayoutProps) {
   return (
     <>
       <Modal />
-      <Header />
+      <Header isError={isError} />
       <div className="pt-20 flex h-full ">
         <Aside />
         <main className="ml-[350px] w-screen py-20 px-10 md:py-10 md:px-5 base:ml-0">

@@ -1,44 +1,69 @@
-import clientAPI from '@/services/api'
 import { ClientProps } from '@/types/client'
 import { useCallback } from 'react'
 import { useToast } from './useToast'
 import { CitiesIbgeProps } from '@/types/citiesForIbge'
 import ibgeAPI from '@/services/ibgeApi'
+import {
+  getDocs,
+  query,
+  collection,
+  addDoc,
+  updateDoc,
+  doc,
+} from 'firebase/firestore'
 
-interface HandleFetchClientsProps {
-  isFormat?: boolean
-}
+import { firestore } from '@/services/firebase'
 
 export function useRequest() {
   const { showToast } = useToast()
 
-  const handleFetchClients = useCallback(
-    async ({ isFormat }: HandleFetchClientsProps) => {
-      try {
-        const result = await clientAPI.get('/clients')
-        const list = result.data as ClientProps[]
+  const handleFetchClients = useCallback(async () => {
+    const q = query(collection(firestore, 'clients'))
 
-        const filter = list.map((item) => {
-          return {
-            value: String(item.id),
-            label: item.name,
-          }
-        })
-        return isFormat ? filter : list
-      } catch {
-        showToast('Error ao buscar clientes', {
-          type: 'error',
-          theme: 'colored',
-        })
-      }
-    },
-    [showToast],
-  )
+    try {
+      const clientsResponse = await getDocs(q).then((querySnapshot) => {
+        const response = querySnapshot.docs.map(
+          (doc) =>
+            ({
+              cellPhone: doc.data().cellPhone,
+              telePhone: doc.data().telePhone,
+              name: doc.data().name,
+              nationality: doc.data().nationality,
+              id: doc.id,
+              issuingBody: doc.data().issuingBody,
+              dateOfBirth: doc.data().dateOfBirth,
+              stateOfBirth: doc.data().stateOfBirth,
+              cityOfBirth: doc.data().cityOfBirth,
+              cpf: doc.data().cpf,
+              rg: doc.data().rg,
+              maritalStatus: doc.data().maritalStatus,
+              gender: doc.data().gender,
+            }) as ClientProps,
+        )
+
+        return response
+      })
+
+      return clientsResponse
+    } catch (err) {
+      showToast('Error ao buscar clientes', {
+        type: 'error',
+        theme: 'colored',
+      })
+    }
+  }, [showToast])
+
+  interface handleUpdateClientProps {
+    clientId: string
+    updateClient: ClientProps
+  }
 
   const handleUpdateClient = useCallback(
-    async (client: ClientProps) => {
+    async ({ clientId, updateClient }: handleUpdateClientProps) => {
       try {
-        await clientAPI.put(`/clients/${client.id}`, client)
+        const docRef = doc(firestore, 'clients', clientId)
+
+        await updateDoc(docRef, { ...updateClient })
 
         showToast('Cliente atualizado com sucesso', {
           type: 'success',
@@ -57,12 +82,14 @@ export function useRequest() {
   const handleCreateClient = useCallback(
     async (client: ClientProps) => {
       try {
-        await clientAPI.post(`/clients`, client)
+        const docRef = await addDoc(collection(firestore, 'clients'), client)
 
         showToast('Cliente adicionado com sucesso', {
           type: 'success',
           theme: 'colored',
         })
+
+        return { id: docRef.id }
       } catch {
         showToast('Error ao adicionar cliente', {
           type: 'error',

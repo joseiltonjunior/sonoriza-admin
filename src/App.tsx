@@ -1,13 +1,18 @@
-import { Home } from './pages/Home'
-import './index.css'
-import { Layout } from './components/Layout'
+import { Error } from '@/pages/Error'
+import { Home } from '@/pages/Home'
+import { SignIn } from '@/pages/SignIn'
+import { Route, Routes } from 'react-router-dom'
+import { Checkout } from '@/pages/Checkout'
 
-function App() {
+export function App() {
   return (
-    <Layout>
-      <Home />
-    </Layout>
+    <div>
+      <Routes>
+        <Route path="/" element={<SignIn />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="*" element={<Error />} />
+      </Routes>
+    </div>
   )
 }
-
-export default App

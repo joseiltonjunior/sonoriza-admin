@@ -1,15 +1,18 @@
 import { ComponentProps } from 'react'
 import { twMerge } from 'tailwind-merge'
+import ReactLoading from 'react-loading'
 
 interface ButtonProps extends ComponentProps<'button'> {
   title: string
   variant?: 'green' | 'dark' | 'blue' | 'outline' | 'red'
+  isLoading?: boolean
 }
 
 export function Button({
   title,
   variant = 'blue',
   className,
+  isLoading,
   disabled,
   ...rest
 }: ButtonProps) {
@@ -23,7 +26,18 @@ export function Button({
       )}
       {...rest}
     >
-      {title}
+      {isLoading ? (
+        <ReactLoading
+          data-variant={variant}
+          className="loading ml-auto mr-auto"
+          type="bars"
+          color={variant === 'outline' ? '#C6D5DB' : '#fff'}
+          width={20}
+          height={20}
+        />
+      ) : (
+        title
+      )}
     </button>
   )
 }
