@@ -50,9 +50,9 @@ export const TRANSLATION_EN_US = {
   },
 
   modalAcknowledgment: {
-    title: 'Thank you for the opportunity!!',
+    title: 'Opss!!',
     description:
-      'It was a real challenge, but I was able to learn and apply a variety of knowledge in practice. I hope you appreciate the results. See you soon!',
+      'The rest of the flow is still under development but will be available soon.',
   },
 
   calendar: {

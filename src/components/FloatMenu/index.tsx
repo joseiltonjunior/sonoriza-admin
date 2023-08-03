@@ -1,6 +1,8 @@
 import { useFloatMenu } from '@/hooks/useFloatMenu'
 import { useModal } from '@/hooks/useModal'
 import { useNavigate } from 'react-router-dom'
+import { signOut } from 'firebase/auth'
+import { auth } from '@/services/firebase'
 
 export function FloatMenu() {
   const { isVisible, show } = useFloatMenu()
@@ -27,6 +29,7 @@ export function FloatMenu() {
             title: 'Já vai !?',
             textConfirm: 'Sair',
             confirm() {
+              signOut(auth)
               navigate('/')
             },
             description: 'Você realmente deseja sair?',
