@@ -4,6 +4,8 @@ import colors from 'tailwindcss/colors'
 import { store } from '@/storage'
 import { Provider } from 'react-redux'
 
+import { Analytics } from '@vercel/analytics/react'
+
 import 'react-loading-skeleton/dist/skeleton.css'
 import React from 'react'
 import { ToastContainer } from 'react-toastify'
@@ -30,6 +32,7 @@ export function Hooks({ children }: React.PropsWithChildren) {
           </FloatMenuProvider>
         </ModalProvider>
       </Provider>
+      <Analytics />
     </>
   )
 }
