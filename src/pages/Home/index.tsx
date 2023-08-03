@@ -13,12 +13,15 @@ import arrow from '@/assets/arrow-strong.svg'
 import { formatStatusSale } from '@/utils/statusSale'
 import { formatMoney } from '@/utils/formatMoney'
 import Skeleton from 'react-loading-skeleton'
+import { useNavigate } from 'react-router-dom'
 
 export function Home() {
   const { t } = useTranslation()
   const { showToast } = useToast()
 
   const [sales, setSales] = useState<SalesProps[]>()
+
+  const navigate = useNavigate()
 
   const handleFetchSales = useCallback(() => {
     const q = query(collection(firestore, 'sales'))
@@ -36,8 +39,7 @@ export function Home() {
 
         setSales(salesResponses)
       })
-      .catch((e) => {
-        console.log(e)
+      .catch(() => {
         showToast('Error while fetching sales', {
           type: 'error',
           theme: 'colored',
@@ -60,8 +62,10 @@ export function Home() {
 
         {sales ? (
           sales.map((sale) => (
-            <a
-              href={`/checkout?id=${sale.id}`}
+            <button
+              onClick={() => {
+                navigate(`/checkout?id=${sale.id}`)
+              }}
               key={sale.id}
               className={`bg-white rounded-2xl p-7 mt-8 top-5 flex justify-between items-center border hover:border-gray-300 ${
                 sale.status === 1 && 'border-red-500'
@@ -85,7 +89,7 @@ export function Home() {
               <div>
                 <img src={arrow} alt="arrow" className="w-6 h-6 -rotate-90" />
               </div>
-            </a>
+            </button>
           ))
         ) : (
           <Skeleton className="h-[106px] mt-8 rounded-2xl" />
