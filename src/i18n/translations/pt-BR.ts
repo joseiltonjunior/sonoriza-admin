@@ -50,9 +50,9 @@ export const TRANSLATION_PT_BR = {
   },
 
   modalAcknowledgment: {
-    title: 'Obrigado pela oportunidade!!',
+    title: 'Opss!!',
     description:
-      'Foi um verdadeiro desafio, mas pude aprender e aplicar uma variedade de conhecimentos na prática. Espero que apreciem os resultados. Até breve!',
+      'O restante do fluxo está em desenvolvimento e em breve estará disponível para utilização.',
   },
 
   calendar: {

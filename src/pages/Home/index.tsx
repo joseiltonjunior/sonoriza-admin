@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useToast } from '@/hooks/useToast'
 
 import { collection, getDocs, query } from 'firebase/firestore'
-import { firestore } from '@/services/firebase'
+import { firestore, auth } from '@/services/firebase'
 import { useCallback, useEffect, useState } from 'react'
 import { SalesProps } from '@/types/sales'
 
@@ -14,6 +14,9 @@ import { formatStatusSale } from '@/utils/statusSale'
 import { formatMoney } from '@/utils/formatMoney'
 import Skeleton from 'react-loading-skeleton'
 import { useNavigate } from 'react-router-dom'
+
+// import { signOut } from 'firebase/auth'
+// import { auth } from '@/services/firebase'
 
 export function Home() {
   const { t } = useTranslation()
@@ -48,8 +51,16 @@ export function Home() {
   }, [showToast])
 
   useEffect(() => {
-    handleFetchSales()
-  }, [handleFetchSales])
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        handleFetchSales()
+      } else {
+        navigate('/')
+      }
+    })
+
+    return () => unsubscribe()
+  }, [handleFetchSales, navigate])
 
   return (
     <Layout>
