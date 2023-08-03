@@ -11,6 +11,7 @@ import {
 import { AttachFile } from './AttachFile'
 import { useTranslation } from 'react-i18next'
 import { useModal } from '@/hooks/useModal'
+import { useNavigate } from 'react-router-dom'
 
 export function Steps() {
   const [checkClient, setCheckClient] = useState(false)
@@ -22,6 +23,8 @@ export function Steps() {
 
   const dispatch = useDispatch()
   const { openModal } = useModal()
+  const navigate = useNavigate()
+
   const { t } = useTranslation()
 
   return (
@@ -55,10 +58,15 @@ export function Steps() {
           }}
         />
         <button
-          disabled={progress === 2}
           className="text-blue-600 underline text-sm font-bold hover:text-blue-600/90"
           type="button"
-          onClick={() => dispatch(setDecrementProgress())}
+          onClick={() => {
+            if (progress === 2) {
+              navigate('/home')
+            } else {
+              dispatch(setDecrementProgress())
+            }
+          }}
         >
           {t('buttonBack')}
         </button>

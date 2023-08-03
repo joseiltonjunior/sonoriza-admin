@@ -1,20 +1,18 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
-import { Hooks } from './hooks/index.tsx'
+import { RouterProvider } from 'react-router-dom'
+
 import './i18n'
 import './index.css'
 
-import { BrowserRouter } from 'react-router-dom'
-
-import { App } from './App.tsx'
+import { router } from './routes/routes.tsx'
+import { Hooks } from './hooks/index.tsx'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Hooks>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <RouterProvider router={router} />
     </Hooks>
   </React.StrictMode>,
 )

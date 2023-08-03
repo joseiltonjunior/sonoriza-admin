@@ -1,23 +1,28 @@
+import { App } from '@/App'
 import { Checkout } from '@/pages/Checkout'
 import { Error } from '@/pages/Error'
 import { Home } from '@/pages/Home'
 import { SignIn } from '@/pages/SignIn'
 import { createBrowserRouter } from 'react-router-dom'
 
-export const routes = createBrowserRouter([
+export const router = createBrowserRouter([
   {
     path: '/',
-    element: <SignIn />,
+    element: <App />,
     errorElement: <Error />,
-  },
-  {
-    path: '/home',
-    element: <Home />,
-    errorElement: <Error />,
-  },
-  {
-    path: '/checkout',
-    element: <Checkout />,
-    errorElement: <Error />,
+    children: [
+      {
+        path: '/',
+        element: <SignIn />,
+      },
+      {
+        path: '/home',
+        element: <Home />,
+      },
+      {
+        path: '/checkout',
+        element: <Checkout />,
+      },
+    ],
   },
 ])

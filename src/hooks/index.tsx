@@ -10,21 +10,24 @@ import { ToastContainer } from 'react-toastify'
 
 import 'react-toastify/dist/ReactToastify.css'
 import { FormProvider } from './useForm'
+import { FloatMenuProvider } from './useFloatMenu'
 
 export function Hooks({ children }: React.PropsWithChildren) {
   return (
     <>
       <Provider store={store}>
         <ModalProvider>
-          <FormProvider>
-            <SkeletonTheme
-              baseColor={colors.gray[100]}
-              highlightColor={colors.gray[300]}
-            >
-              {children}
-            </SkeletonTheme>
-            <ToastContainer />
-          </FormProvider>
+          <FloatMenuProvider>
+            <FormProvider>
+              <SkeletonTheme
+                baseColor={colors.gray[100]}
+                highlightColor={colors.gray[300]}
+              >
+                {children}
+              </SkeletonTheme>
+              <ToastContainer />
+            </FormProvider>
+          </FloatMenuProvider>
         </ModalProvider>
       </Provider>
     </>

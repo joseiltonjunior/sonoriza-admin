@@ -1,11 +1,16 @@
-interface ButtonProps {
+import { ComponentProps } from 'react'
+
+interface ButtonProps extends ComponentProps<'button'> {
   icon: string
 }
 
-export function Button({ icon }: ButtonProps) {
+export function Button({ icon, ...rest }: ButtonProps) {
   return (
-    <div className="w-9 h-9 bg-gray-200 items-center flex justify-center rounded-full cursor-pointer">
+    <button
+      className="w-9 h-9 bg-gray-200 items-center flex justify-center rounded-full cursor-pointer"
+      {...rest}
+    >
       <img src={icon} alt="bell" />
-    </div>
+    </button>
   )
 }
