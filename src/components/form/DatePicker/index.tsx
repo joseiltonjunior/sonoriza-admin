@@ -61,7 +61,7 @@ export function DatePickerCustom({
   ]
 
   return (
-    <Container className="relative z-10 flex flex-col">
+    <Container className="relative z-20 flex flex-col">
       <h4 className="font-bold text-sm mb-3">{label}</h4>
       <DatePicker
         {...register(name as keyof ClientProps)}

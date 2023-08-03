@@ -1,46 +1,53 @@
-import { Button } from '@/components/Button'
 import { Layout } from '@/components/Layout'
-import { Input } from '@/components/form/Input'
-import { useForm } from 'react-hook-form'
-import { decodeToken } from 'react-jwt'
 
 import { useTranslation } from 'react-i18next'
-import { yupResolver } from '@hookform/resolvers/yup'
-import { tokenSchema } from './tokenSchema'
+
 import { useToast } from '@/hooks/useToast'
-import { useNavigate } from 'react-router-dom'
+
+import { collection, getDocs, query } from 'firebase/firestore'
+import { firestore } from '@/services/firebase'
+import { useCallback, useEffect, useState } from 'react'
+import { SalesProps } from '@/types/sales'
+
+import arrow from '@/assets/arrow-strong.svg'
+import { formatStatusSale } from '@/utils/statusSale'
+import { formatMoney } from '@/utils/formatMoney'
+import Skeleton from 'react-loading-skeleton'
 
 export function Home() {
   const { t } = useTranslation()
   const { showToast } = useToast()
 
-  const navigate = useNavigate()
+  const [sales, setSales] = useState<SalesProps[]>()
 
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors },
-  } = useForm<{ token: string }>({ resolver: yupResolver(tokenSchema) })
+  const handleFetchSales = useCallback(() => {
+    const q = query(collection(firestore, 'sales'))
+    getDocs(q)
+      .then((querySnapshot) => {
+        const salesResponses = querySnapshot.docs.map(
+          (doc) =>
+            ({
+              priceTotal: doc.data().priceTotal,
+              products: doc.data().products,
+              status: doc.data().status,
+              id: doc.id,
+            }) as SalesProps,
+        )
 
-  function submit(data: { token: string }) {
-    const decode = decodeToken(data.token) as {
-      id: string
-      price: number
-    }
+        setSales(salesResponses)
+      })
+      .catch((e) => {
+        console.log(e)
+        showToast('Error while fetching sales', {
+          type: 'error',
+          theme: 'colored',
+        })
+      })
+  }, [showToast])
 
-    if (decode && decode.id) {
-      navigate(`/checkout?token=${data.token}`)
-      return
-    }
-
-    setError('token', { message: 'Invalid token' })
-
-    showToast('Invalid Token', {
-      type: 'error',
-      theme: 'colored',
-    })
-  }
+  useEffect(() => {
+    handleFetchSales()
+  }, [handleFetchSales])
 
   return (
     <Layout>
@@ -48,24 +55,41 @@ export function Home() {
         <h1 className="font-bold text-blue-600 leading-6">{t('titleHome')}</h1>
 
         <h3 className="font-bold text-green-400 leading-8 text-xl">
-          Buscar venda
+          Listar vendas
         </h3>
 
-        <div className="bg-white rounded-2xl p-7 mt-8 top-5">
-          <form
-            onSubmit={handleSubmit(submit)}
-            className="relative max-w-[598px] md:max-w-full"
-          >
-            <Input
-              name="token"
-              register={register}
-              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwicHJpY2UiOjEyMjJ9.Q55CLywSNqgCOSXsyMpZvpf6gmJX5ucujBcxgyVHgf0"
-              label={'Digite o código da venda'}
-              error={errors.token}
-            />
-            <Button title="Pesquisar" className="mt-4" />
-          </form>
-        </div>
+        {sales ? (
+          sales.map((sale) => (
+            <a
+              href={`/checkout?id=${sale.id}`}
+              key={sale.id}
+              className={`bg-white rounded-2xl p-7 mt-8 top-5 flex justify-between items-center border hover:border-gray-300 ${
+                sale.status === 1 && 'border-red-500'
+              }`}
+            >
+              <div>
+                <strong>ID da venda</strong>
+                <p>{sale.id}</p>
+              </div>
+
+              <div>
+                <strong>Status</strong>
+                <p>{formatStatusSale(sale.status)}</p>
+              </div>
+
+              <div>
+                <strong>Valor total</strong>
+                <p>{formatMoney(sale.priceTotal)}</p>
+              </div>
+
+              <div>
+                <img src={arrow} alt="arrow" className="w-6 h-6 -rotate-90" />
+              </div>
+            </a>
+          ))
+        ) : (
+          <Skeleton className="h-[106px] mt-8 rounded-2xl" />
+        )}
       </div>
     </Layout>
   )

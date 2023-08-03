@@ -5,42 +5,61 @@ import { Total } from '@/components/Total'
 
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { decodeToken } from 'react-jwt'
-import { useLocation, useNavigate } from 'react-router-dom'
+
+import { useLocation } from 'react-router-dom'
 import queryString from 'query-string'
+import { doc, getDoc } from 'firebase/firestore'
+import { firestore } from '@/services/firebase'
+import { useToast } from '@/hooks/useToast'
+import { SalesProps } from '@/types/sales'
+import Skeleton from 'react-loading-skeleton'
 
 export function Checkout() {
   const { t } = useTranslation()
-  const navigate = useNavigate()
 
-  const [price, setPrice] = useState(0)
+  const [sale, setSale] = useState<SalesProps>()
+  const { showToast } = useToast()
 
   const location = useLocation()
   const params = queryString.parse(location.search)
-  const token = params.token as string
+  const saleId = params.id as string
 
-  const handleGetPrice = useCallback(() => {
-    const decode = decodeToken(token) as {
-      id: string
-      price: number
-    }
+  const handleFetchSale = useCallback(
+    async (id: string) => {
+      const docRef = doc(firestore, 'sales', id)
+      await getDoc(docRef)
+        .then((docSnapshot) => {
+          if (docSnapshot.exists()) {
+            const saleResponses = {
+              priceTotal: docSnapshot.data().priceTotal,
+              products: docSnapshot.data().products,
+              status: docSnapshot.data().status,
+              id: docSnapshot.id,
+            }
 
-    if (decode && decode.id) {
-      setPrice(decode.price)
-
-      return
-    }
-
-    navigate(`/`)
-  }, [navigate, token])
+            setSale(saleResponses)
+          } else {
+            showToast('Sale not found', {
+              type: 'warning',
+              theme: 'colored',
+            })
+          }
+        })
+        .catch(() => {
+          showToast('Error while fetching sale', {
+            type: 'error',
+            theme: 'colored',
+          })
+        })
+    },
+    [showToast],
+  )
 
   useEffect(() => {
-    if (token) {
-      handleGetPrice()
-    } else if (!params.token) {
-      navigate(`/`)
+    if (saleId) {
+      handleFetchSale(saleId)
     }
-  }, [handleGetPrice, navigate, params.token, token])
+  }, [handleFetchSale, saleId])
 
   return (
     <Layout>
@@ -53,7 +72,11 @@ export function Checkout() {
 
         <Progress />
 
-        <Total value={price} />
+        {sale ? (
+          <Total value={sale.priceTotal} />
+        ) : (
+          <Skeleton className="h-[3.2rem] mt-8 rounded-2xl" />
+        )}
 
         <Steps />
       </div>
