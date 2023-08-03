@@ -11,7 +11,8 @@ interface InputProps extends ComponentProps<'input'> {
   placeholder?: string
   label: string
 
-  register: UseFormRegister<ClientProps>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  register: UseFormRegister<any>
   mask?: InputMask[]
 }
 
