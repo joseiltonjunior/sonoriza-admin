@@ -67,7 +67,7 @@ export function Home() {
                 navigate(`/checkout?id=${sale.id}`)
               }}
               key={sale.id}
-              className={`bg-white rounded-2xl p-7 mt-8 top-5 flex justify-between items-center border hover:border-gray-300 ${
+              className={`bg-white rounded-2xl p-7 mt-8 top-5 flex justify-between items-center border hover:border-gray-300 w-full ${
                 sale.status === 1 && 'border-red-500'
               }`}
             >
