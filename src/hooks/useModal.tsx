@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState } from 'react'
 interface ModalInfoProps {
   description: string
   confirm: () => void
+  textConfirm?: string
   title: string
   singleButton?: boolean
 }
@@ -13,16 +14,17 @@ interface ModalStateProps extends ModalInfoProps {
 
 interface ModalContextData {
   modalState: ModalStateProps
-  openModal({ description, confirm, title }: ModalInfoProps): void
+  openModal({ description, confirm, title, textConfirm }: ModalInfoProps): void
   closeModal(): void
 }
 
 const ModalContext = createContext<ModalContextData>({} as ModalContextData)
 
 export function ModalProvider({ children }: React.PropsWithChildren) {
-  const [modalState, setState] = useState({
+  const [modalState, setState] = useState<ModalStateProps>({
     visible: false,
     description: '',
+    textConfirm: '',
     confirm: () => {},
     title: '',
   })
@@ -34,7 +36,13 @@ export function ModalProvider({ children }: React.PropsWithChildren) {
 
   const closeModal = () => {
     document.body.style.overflow = 'auto'
-    setState({ visible: false, description: '', confirm: () => {}, title: '' })
+    setState({
+      visible: false,
+      description: '',
+      confirm: () => {},
+      textConfirm: '',
+      title: '',
+    })
   }
 
   return (

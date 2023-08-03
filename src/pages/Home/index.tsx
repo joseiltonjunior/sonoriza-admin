@@ -67,23 +67,25 @@ export function Home() {
                 navigate(`/checkout?id=${sale.id}`)
               }}
               key={sale.id}
-              className={`bg-white rounded-2xl p-7 mt-8 top-5 flex justify-between items-center border hover:border-gray-300 w-full ${
+              className={`bg-white rounded-2xl p-7 mt-8 top-5 flex gap-12 justify-between items-center border hover:border-gray-300 w-full ${
                 sale.status === 1 && 'border-red-500'
               }`}
             >
-              <div>
-                <strong>ID da venda</strong>
-                <p>{sale.id}</p>
-              </div>
+              <div className="flex md:flex-col w-full justify-between">
+                <div className="md:flex gap-2 truncate">
+                  <strong>ID da venda</strong>
+                  <p>{sale.id}</p>
+                </div>
 
-              <div>
-                <strong>Status</strong>
-                <p>{formatStatusSale(sale.status)}</p>
-              </div>
+                <div className="md:flex gap-2">
+                  <strong>Status</strong>
+                  <p>{formatStatusSale(sale.status)}</p>
+                </div>
 
-              <div>
-                <strong>Valor total</strong>
-                <p>{formatMoney(sale.priceTotal)}</p>
+                <div className="md:flex gap-2">
+                  <strong>Valor total</strong>
+                  <p>{formatMoney(sale.priceTotal)}</p>
+                </div>
               </div>
 
               <div>

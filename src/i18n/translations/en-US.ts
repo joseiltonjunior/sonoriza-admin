@@ -3,7 +3,7 @@ export const TRANSLATION_EN_US = {
   captionHome: 'New sale',
 
   progress: {
-    first: 'Product',
+    first: 'Home',
     second: 'Client',
     third: 'Attach file',
     fourth: 'Payments',

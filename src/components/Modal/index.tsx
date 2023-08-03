@@ -6,7 +6,14 @@ import x from '@/assets/x.svg'
 export function Modal() {
   const {
     closeModal,
-    modalState: { visible, description, title, confirm, singleButton },
+    modalState: {
+      visible,
+      description,
+      title,
+      confirm,
+      singleButton,
+      textConfirm,
+    },
   } = useModal()
 
   const { t } = useTranslation()
@@ -57,7 +64,7 @@ export function Modal() {
             <Button
               className="w-[93px]"
               variant="red"
-              title={t('buttonDelete')}
+              title={textConfirm || t('buttonDelete')}
               onClick={() => {
                 if (confirm) confirm()
                 closeModal()
