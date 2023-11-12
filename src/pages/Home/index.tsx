@@ -1,46 +1,45 @@
 import { Layout } from '@/components/Layout'
 
-import { useTranslation } from 'react-i18next'
-
 import { useToast } from '@/hooks/useToast'
 
 import { collection, getDocs, query } from 'firebase/firestore'
 import { firestore, auth } from '@/services/firebase'
 import { useCallback, useEffect, useState } from 'react'
-import { SalesProps } from '@/types/sales'
 
-import arrow from '@/assets/arrow-strong.svg'
-import { formatStatusSale } from '@/utils/statusSale'
-import { formatMoney } from '@/utils/formatMoney'
 import Skeleton from 'react-loading-skeleton'
 import { useNavigate } from 'react-router-dom'
+import { MusicProps } from '@/types/musicProps'
 
-// import { signOut } from 'firebase/auth'
-// import { auth } from '@/services/firebase'
+import { useDispatch, useSelector } from 'react-redux'
+import { ReduxProps } from '@/storage'
+import { SideMenuProps, handleSetTag } from '@/storage/modules/sideMenu/reducer'
+import { MusicalGenresDataProps } from '@/types/musicalGenresProps'
+import { ArtistsDataProps } from '@/types/artistsProps'
 
 export function Home() {
-  const { t } = useTranslation()
   const { showToast } = useToast()
 
-  const [sales, setSales] = useState<SalesProps[]>()
+  const { tag } = useSelector<ReduxProps, SideMenuProps>(
+    (state) => state.sideMenu,
+  )
+
+  const [musics, setMusics] = useState<MusicProps[]>()
+  const [genres, setGenres] = useState<MusicalGenresDataProps[]>()
+  const [artists, setArtists] = useState<ArtistsDataProps[]>()
+
+  const [isLoading, setIsLoading] = useState(false)
 
   const navigate = useNavigate()
 
-  const handleFetchSales = useCallback(() => {
-    const q = query(collection(firestore, 'sales'))
+  const dispatch = useDispatch()
+
+  const handleFetchMusics = useCallback(() => {
+    const q = query(collection(firestore, 'musics'))
     getDocs(q)
       .then((querySnapshot) => {
-        const salesResponses = querySnapshot.docs.map(
-          (doc) =>
-            ({
-              priceTotal: doc.data().priceTotal,
-              products: doc.data().products,
-              status: doc.data().status,
-              id: doc.id,
-            }) as SalesProps,
-        )
+        const musicsResponses = querySnapshot.docs.map((doc) => doc.data())
 
-        setSales(salesResponses)
+        setMusics(musicsResponses as MusicProps[])
       })
       .catch(() => {
         showToast('Error while fetching sales', {
@@ -50,62 +49,142 @@ export function Home() {
       })
   }, [showToast])
 
+  const handleFetchArtists = useCallback(() => {
+    const q = query(collection(firestore, 'artists'))
+    getDocs(q)
+      .then((querySnapshot) => {
+        const artistsResponses = querySnapshot.docs.map((doc) => doc.data())
+
+        setArtists(artistsResponses as ArtistsDataProps[])
+      })
+      .catch(() => {
+        showToast('Error while fetching sales', {
+          type: 'error',
+          theme: 'colored',
+        })
+      })
+  }, [showToast])
+
+  const handleFetchGenres = useCallback(() => {
+    setIsLoading(true)
+    const q = query(collection(firestore, 'musicalGenres'))
+    getDocs(q)
+      .then((querySnapshot) => {
+        const genresResponses = querySnapshot.docs.map((doc) => doc.data())
+
+        setGenres(genresResponses as MusicalGenresDataProps[])
+
+        handleFetchMusics()
+        handleFetchArtists()
+      })
+      .catch(() => {
+        showToast('Error while fetching sales', {
+          type: 'error',
+          theme: 'colored',
+        })
+      })
+      .finally(() => setIsLoading(false))
+  }, [handleFetchArtists, handleFetchMusics, showToast])
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        handleFetchSales()
+        handleFetchGenres()
       } else {
         navigate('/')
       }
     })
 
     return () => unsubscribe()
-  }, [handleFetchSales, navigate])
+  }, [handleFetchArtists, handleFetchGenres, handleFetchMusics, navigate])
 
   return (
     <Layout>
-      <div className="max-w-3xl">
-        <h1 className="font-bold text-blue-600 leading-6">{t('titleHome')}</h1>
+      <div className="max-w-3xl pb-8">
+        <h1 className="font-bold text-gray-700 leading-6">Sonoriza</h1>
 
-        <h3 className="font-bold text-green-400 leading-8 text-xl">
-          Listar vendas
-        </h3>
+        <h3 className="font-bold text-purple-600 leading-8 text-xl">Home</h3>
 
-        {sales ? (
-          sales.map((sale) => (
+        <div className="flex gap-4 mt-4">
+          <button
+            onClick={() => dispatch(handleSetTag({ tag: 'musics' }))}
+            className={`w-full  font-bold py-2 px-6 rounded-xl  border border-purple-600 ${
+              tag === 'musics'
+                ? 'bg-white text-purple-600'
+                : 'bg-purple-600 text-white'
+            }`}
+          >
+            Músicas
+          </button>
+          <button
+            onClick={() => dispatch(handleSetTag({ tag: 'artists' }))}
+            className={`w-full  font-bold py-2 px-6 rounded-xl  border border-purple-600 ${
+              tag === 'artists'
+                ? 'bg-white text-purple-600'
+                : 'bg-purple-600 text-white'
+            }`}
+          >
+            Artistas
+          </button>
+          <button
+            onClick={() => dispatch(handleSetTag({ tag: 'genres' }))}
+            className={`w-full  font-bold py-2 px-6 rounded-xl  border border-purple-600 ${
+              tag === 'genres'
+                ? 'bg-white text-purple-600'
+                : 'bg-purple-600 text-white'
+            }`}
+          >
+            Gêneros
+          </button>
+        </div>
+
+        {tag === 'musics' &&
+          musics &&
+          musics.map((music) => (
             <button
               onClick={() => {
-                navigate(`/checkout?id=${sale.id}`)
+                console.log(music)
               }}
-              key={sale.id}
-              className={`bg-white rounded-2xl p-7 mt-8 top-5 flex gap-12 justify-between items-center border hover:border-gray-300 w-full ${
-                sale.status === 1 && 'border-red-500'
-              }`}
+              key={music.id}
+              className={`bg-white rounded-2xl p-7 mt-8 top-5 flex gap-12 justify-between items-center border hover:border-gray-300 w-full `}
             >
-              <div className="flex md:flex-col w-full justify-between">
-                <div className="md:flex gap-2 truncate">
-                  <strong>ID da venda</strong>
-                  <p>{sale.id}</p>
-                </div>
-
-                <div className="md:flex gap-2">
-                  <strong>Status</strong>
-                  <p>{formatStatusSale(sale.status)}</p>
-                </div>
-
-                <div className="md:flex gap-2">
-                  <strong>Valor total</strong>
-                  <p>{formatMoney(sale.priceTotal)}</p>
-                </div>
-              </div>
-
-              <div>
-                <img src={arrow} alt="arrow" className="w-6 h-6 -rotate-90" />
-              </div>
+              <p>{music.title}</p>
             </button>
-          ))
-        ) : (
-          <Skeleton className="h-[106px] mt-8 rounded-2xl" />
+          ))}
+
+        {tag === 'artists' &&
+          artists &&
+          artists.map((artist) => (
+            <button
+              onClick={() => {
+                console.log(artist)
+              }}
+              key={artist.id}
+              className={`bg-white rounded-2xl p-7 mt-8 top-5 flex gap-12 justify-between items-center border hover:border-gray-300 w-full `}
+            >
+              <p>{artist.name}</p>
+            </button>
+          ))}
+
+        {tag === 'genres' &&
+          genres &&
+          genres.map((genre) => (
+            <button
+              onClick={() => {
+                console.log(genre)
+              }}
+              key={genre.name}
+              className={`bg-white rounded-2xl p-7 mt-8 top-5 flex gap-12 justify-between items-center border hover:border-gray-300 w-full `}
+            >
+              <p>{genre.name}</p>
+            </button>
+          ))}
+
+        {isLoading && (
+          <>
+            <Skeleton className="h-[80px] mt-8 rounded-2xl" />
+            <Skeleton className="h-[80px] mt-8 rounded-2xl" />
+          </>
         )}
       </div>
     </Layout>

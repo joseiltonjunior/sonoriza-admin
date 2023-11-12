@@ -23,7 +23,7 @@
     }
 
     body::-webkit-scrollbar-thumb {
-        background: #63D391;
+        background: #9333ea;
     }
 
     body,
@@ -31,7 +31,7 @@
     textarea,
     button {
         font-family: 'Baloo 2', sans-serif;
-        color: #205266;
+        color: #312e38;
         font-weight: 400;
     }
 
@@ -52,6 +52,10 @@
 
     .button-blue {
         @apply bg-blue-400 hover:bg-blue-400/90
+    }
+
+    .button-purple {
+        @apply bg-purple-600 hover:bg-purple-600/90
     }
 
     .button-blue-dark {
