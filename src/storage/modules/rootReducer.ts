@@ -1,4 +1,7 @@
-import { combineReducers } from 'redux'
-import progress from './progress/reducer'
+import { combineReducers } from '@reduxjs/toolkit'
 
-export default combineReducers({ progress })
+import sideMenu from './sideMenu/reducer'
+
+export default combineReducers({
+  sideMenu,
+})

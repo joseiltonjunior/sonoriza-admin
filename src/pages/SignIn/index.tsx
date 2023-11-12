@@ -4,7 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm } from 'react-hook-form'
 import { signInSchema } from './tokenSchema'
 import { Layout } from '@/components/Layout'
-import { useTranslation } from 'react-i18next'
+
 import { auth } from '@/services/firebase'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { useToast } from '@/hooks/useToast'
@@ -26,7 +26,6 @@ export function SignIn() {
     resolver: yupResolver(signInSchema),
   })
 
-  const { t } = useTranslation()
   const { showToast } = useToast()
   const navigate = useNavigate()
 
@@ -53,9 +52,11 @@ export function SignIn() {
   return (
     <Layout isError>
       <div className="max-w-xl">
-        <h1 className="font-bold text-blue-600 leading-6">{t('titleHome')}</h1>
+        <h1 className="font-bold text-blue-600 leading-6">Sonoriza</h1>
 
-        <h3 className="font-bold text-green-400 leading-8 text-xl">Sign In</h3>
+        <h3 className="font-bold text-purple-600 leading-8 text-2xl">
+          Sign In
+        </h3>
         <div className="bg-white rounded-2xl p-7 mt-8 top-5">
           <form
             onSubmit={handleSubmit(submit)}
@@ -83,7 +84,7 @@ export function SignIn() {
             <Button
               title="Entrar"
               className="mt-12 w-[252px] ml-full md:w-full"
-              variant="green"
+              variant="purple"
               isLoading={isLoading}
             />
           </form>

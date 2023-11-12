@@ -1,6 +1,6 @@
 import { Layout } from '@/components/Layout'
-import { Progress } from '@/components/Progress/Index'
-import { Steps } from '@/components/Steps'
+// import { Progress } from '@/components/Progress/Index'
+
 import { Total } from '@/components/Total'
 
 import { useCallback, useEffect, useState } from 'react'
@@ -70,15 +70,11 @@ export function Checkout() {
           {t('captionHome')}
         </h3>
 
-        <Progress />
-
         {sale ? (
           <Total value={sale.priceTotal} />
         ) : (
           <Skeleton className="h-[3.2rem] mt-8 rounded-2xl" />
         )}
-
-        <Steps />
       </div>
     </Layout>
   )

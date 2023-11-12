@@ -1,11 +1,15 @@
-import { legacy_createStore as createStore } from 'redux'
-import rootReducer from './modules/rootReducer'
-import { ProgressProps } from './modules/progress/type'
+import { configureStore } from '@reduxjs/toolkit'
+
+import sideMenuReducer, { SideMenuProps } from './modules/sideMenu/reducer'
 
 export interface ReduxProps {
-  progress: ProgressProps
+  sideMenu: SideMenuProps
 }
 
-const store = createStore(rootReducer)
+const store = configureStore({
+  reducer: {
+    sideMenu: sideMenuReducer,
+  },
+})
 
 export { store }
