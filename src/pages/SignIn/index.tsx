@@ -5,11 +5,14 @@ import { useForm } from 'react-hook-form'
 import { signInSchema } from './tokenSchema'
 import { Layout } from '@/components/Layout'
 
-import { auth } from '@/services/firebase'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+} from 'firebase/auth'
 import { useToast } from '@/hooks/useToast'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface SignInProps {
   email: string
@@ -48,6 +51,20 @@ export function SignIn() {
       })
       .finally(() => setIsLoading(false))
   }
+
+  const auth = getAuth()
+
+  const handleVerifyUser = useCallback(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        navigate('/home')
+      }
+    })
+  }, [auth, navigate])
+
+  useEffect(() => {
+    handleVerifyUser()
+  }, [handleVerifyUser])
 
   return (
     <Layout isError>
