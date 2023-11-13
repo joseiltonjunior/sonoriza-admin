@@ -52,7 +52,7 @@ export function SignIn() {
   return (
     <Layout isError>
       <div className="max-w-xl">
-        <h1 className="font-bold text-blue-600 leading-6">Sonoriza</h1>
+        <h1 className="font-bold text-gray-700 leading-6">Sonoriza</h1>
 
         <h3 className="font-bold text-purple-600 leading-8 text-2xl">
           Sign In
