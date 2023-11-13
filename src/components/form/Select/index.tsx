@@ -10,7 +10,8 @@ interface SelectProps extends ComponentProps<'select'> {
   name?: string
   error?: FieldError
   label: string
-  register?: UseFormRegister<ClientProps>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  register?: UseFormRegister<any>
   isLoading?: boolean
 }
 

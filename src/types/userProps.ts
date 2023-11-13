@@ -10,7 +10,7 @@ export interface UserDataProps {
   displayName: string | null
   photoURL: string | null
   uid: string
-  plain: string | null
+  plan: string | null
   favoritesArtists?: string[]
   favoritesMusics?: string[]
 }

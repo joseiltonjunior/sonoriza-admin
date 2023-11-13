@@ -13,7 +13,7 @@ export function FloatMenu() {
     <div
       className={`${
         isVisible ? 'visible' : 'hidden'
-      } absolute r-0 w-40 z-10 mt-24 right-10 md:right-5 bg-white rounded-md overflow-hidden`}
+      } fixed r-0 w-40 z-10 mt-24 right-10 md:right-5 bg-white rounded-md overflow-hidden`}
     >
       <button
         onClick={() => show(false)}

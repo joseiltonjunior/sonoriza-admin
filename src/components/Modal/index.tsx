@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useModal } from '../../hooks/useModal'
 import { Button } from '../Button'
-import x from '@/assets/x.svg'
+import { IoClose } from 'react-icons/io5'
 
 export function Modal() {
   const {
@@ -26,19 +26,19 @@ export function Modal() {
     >
       <div
         onClick={() => closeModal()}
-        className="bg-blue-600/70 h-full w-full absolute"
+        className="bg-gray-700/80 h-full w-full absolute"
       />
       <div className="bg-white max-w-[451px] w-full min-h-[191px] z-10 rounded-[20px] p-6  flex flex-col justify-between relative">
         <button
-          className="bg-gray-300 absolute -top-3 -right-3 w-9 h-9 rounded-full flex items-center justify-center "
+          className="bg-purple-600 absolute -top-3 -right-3 w-9 h-9 rounded-full flex items-center justify-center "
           onClick={closeModal}
         >
-          <img src={x} alt="close modal" />
+          <IoClose color="#fff" />
         </button>
 
         <div>
           <p className="text-lg font-bold">{title}</p>
-          <div className="bg-green-400 rounded-3xl h-1 w-6" />
+          <div className="bg-purple-600 rounded-3xl h-1 w-6" />
           <p className="text-sm font-normal mt-4">{description}</p>
         </div>
 
@@ -57,7 +57,7 @@ export function Modal() {
           <div className="flex items-end justify-between">
             <button
               onClick={closeModal}
-              className="text-blue-600 underline text-sm font-normal hover:text-blue-600/90"
+              className="text-gray-700 underline text-sm font-normal hover:text-gray-700/90"
             >
               {t('buttonBack')}
             </button>
