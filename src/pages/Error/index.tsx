@@ -9,13 +9,13 @@ export function Error() {
   return (
     <Layout isError>
       <div className="bg-white rounded-2xl p-7 mt-8 top-5 max-w-[598px] md:max-w-full flex flex-col items-center">
-        <img src={notFound} alt="" className="max-h-96 max-w-96" />
+        <img src={notFound} alt="" className="w-60 h-6w-60" />
         <h1 className="mt-8 text-lg font-bold">Oops!</h1>
         <p className="text-base">Page not found.</p>
         <Button
           title="Go to home"
           className="mt-4"
-          variant="green"
+          variant="purple"
           onClick={() => navigate('/')}
         />
       </div>

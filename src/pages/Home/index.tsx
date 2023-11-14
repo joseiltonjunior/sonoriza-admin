@@ -3,7 +3,7 @@ import { Layout } from '@/components/Layout'
 import { useToast } from '@/hooks/useToast'
 
 import { collection, getDocs, query } from 'firebase/firestore'
-import { firestore, auth } from '@/services/firebase'
+import { firestore } from '@/services/firebase'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import Skeleton from 'react-loading-skeleton'
@@ -21,7 +21,10 @@ import { UserDataProps } from '@/types/userProps'
 
 import { Users } from '@/components/Users'
 import { Artists } from '@/components/Artists'
-import { IoHeart } from 'react-icons/io5'
+
+import { Musics } from '@/components/Musics'
+import { getAuth } from 'firebase/auth'
+import { IoMusicalNoteSharp } from 'react-icons/io5'
 import colors from 'tailwindcss/colors'
 
 export function Home() {
@@ -37,6 +40,7 @@ export function Home() {
   const [isLoading, setIsLoading] = useState(false)
 
   const navigate = useNavigate()
+  const auth = getAuth()
 
   const { tag } = useSelector<ReduxProps, SideMenuProps>(
     (state) => state.sideMenu,
@@ -60,6 +64,12 @@ export function Home() {
         return ''
     }
   }, [artists?.length, genres?.length, musics?.length, tag, users?.length])
+
+  const handleGetMusicByGenre = (genre: string) => {
+    const total = musics?.filter((item) => item.genre.includes(genre))
+
+    return total?.length
+  }
 
   const handleFetchMusics = useCallback(() => {
     const q = query(collection(firestore, 'musics'))
@@ -145,7 +155,7 @@ export function Home() {
     })
 
     return () => unsubscribe()
-  }, [handleFetchArtists, handleFetchGenres, handleFetchMusics, navigate])
+  }, [auth, handleFetchArtists, handleFetchGenres, handleFetchMusics, navigate])
 
   return (
     <Layout>
@@ -157,62 +167,35 @@ export function Home() {
               {handleFormatTitle}
             </h3>
           </div>
-          {currentForm !== undefined ? (
-            <Button
-              title="Cancel"
-              variant="red"
-              onClick={() => {
-                setCurrentForm(undefined)
-              }}
-            />
-          ) : (
-            <Button
-              title="Add"
-              variant="purple"
-              onClick={() => {
-                if (tag === 'musics') {
-                  setCurrentForm(0)
-                }
-              }}
-            />
+
+          {tag !== 'users' && (
+            <>
+              {currentForm !== undefined ? (
+                <Button
+                  title="Cancel"
+                  variant="red"
+                  onClick={() => {
+                    setCurrentForm(undefined)
+                  }}
+                />
+              ) : (
+                <Button
+                  title="Add"
+                  variant="purple"
+                  onClick={() => {
+                    if (tag === 'musics') {
+                      setCurrentForm(0)
+                    }
+                  }}
+                />
+              )}
+            </>
           )}
         </div>
 
-        {tag === 'musics' &&
-          currentForm !== 0 &&
-          musics &&
-          musics.map((music) => (
-            <button
-              onClick={() => {
-                console.log(music)
-              }}
-              key={music.id}
-              className={`bg-white rounded-2xl p-7 mt-8 top-5 flex border hover:border-gray-300 w-full items-center justify-between`}
-            >
-              <div className="flex items-center gap-4">
-                <div className="bg-gray-700 w-16 h-16 rounded-full overflow-hidden">
-                  <img
-                    src={music.artwork}
-                    alt="artwork track music"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <p className="text-purple-600 font-bold">{music.title}</p>
-                  <div className="flex items-center gap-1">
-                    <IoHeart color={colors.red[600]} />
-                    <p>{music.like ?? 0}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="items-end flex flex-col">
-                {music.artists.map((artist) => (
-                  <p key={artist.id}>{artist.name}</p>
-                ))}
-              </div>
-            </button>
-          ))}
+        {tag === 'musics' && currentForm !== 0 && musics && (
+          <Musics musics={musics} />
+        )}
 
         {tag === 'artists' && artists && <Artists artists={artists} />}
 
@@ -226,7 +209,13 @@ export function Home() {
               key={genre.name}
               className={`bg-white rounded-2xl p-7 mt-8 top-5 flex gap-12 justify-between items-center border hover:border-gray-300 w-full `}
             >
-              <p className="font-bold text-gray-500">{genre.name}</p>
+              <p className="font-semibold text-gray-500">{genre.name}</p>
+              <div className="flex items-center gap-2">
+                <IoMusicalNoteSharp size={18} color={colors.purple[600]} />
+                <p className="font-semibold">
+                  {handleGetMusicByGenre(genre.name)}
+                </p>
+              </div>
             </button>
           ))}
 

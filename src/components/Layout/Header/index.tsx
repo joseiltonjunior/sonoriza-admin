@@ -1,7 +1,5 @@
 import logo from '@/assets/logo.png'
 
-// import user from '@/assets/user.svg'
-// import { Button } from './Button'
 import { useFloatMenu } from '@/hooks/useFloatMenu'
 
 import { IoPerson } from 'react-icons/io5'

@@ -9,6 +9,11 @@ export function FloatMenu() {
   const { openModal } = useModal()
   const navigate = useNavigate()
 
+  const handleSignOut = async () => {
+    await signOut(auth)
+    navigate('/')
+  }
+
   return (
     <div
       className={`${
@@ -17,26 +22,25 @@ export function FloatMenu() {
     >
       <button
         onClick={() => show(false)}
-        className="cursor-pointer w-full p-3 text-base font-bold hover:bg-slate-50"
+        className="cursor-pointer w-full p-3 font-semibold hover:bg-slate-50"
       >
-        Fechar
+        Close
       </button>
       <button
-        className="cursor-pointer w-full p-3 text-base font-bold hover:bg-slate-50 border-t"
+        className="cursor-pointer w-full p-3 font-semibold hover:bg-slate-50 border-t"
         onClick={() => {
           show(false)
           openModal({
-            title: 'Já vai !?',
-            textConfirm: 'Sair',
+            title: "It's going !?",
+            textConfirm: 'Exit',
             confirm() {
-              signOut(auth)
-              navigate('/')
+              handleSignOut()
             },
-            description: 'Você realmente deseja sair?',
+            description: 'Do you really want to leave',
           })
         }}
       >
-        Sair
+        Exit
       </button>
     </div>
   )

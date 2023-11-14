@@ -15,7 +15,7 @@ export function Layout({ children, isError }: LayoutProps) {
       <FloatMenu />
       <Header isError={isError} />
       <div className="pt-20 flex h-screen">
-        <Aside />
+        <Aside isError={isError} />
         <main className="ml-[350px] w-screen py-20 px-10 md:py-10 md:px-5 base:ml-0">
           {children}
         </main>

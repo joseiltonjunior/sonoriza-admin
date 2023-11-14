@@ -1,5 +1,5 @@
 import { ArtistsDataProps } from '@/types/artistsProps'
-import { IoMusicalNoteSharp, IoPerson, IoStarSharp } from 'react-icons/io5'
+import { IoHeart, IoMusicalNoteSharp, IoPerson, IoPlay } from 'react-icons/io5'
 import colors from 'tailwindcss/colors'
 
 interface ArtistsProps {
@@ -36,11 +36,15 @@ export function Artists({ artists }: ArtistsProps) {
           <div>
             <div className="flex items-center gap-2">
               <IoMusicalNoteSharp size={18} color={colors.purple[600]} />
-              <p className="font-bold"> {artist.musics.length}</p>
+              <p className="font-semibold"> {artist.musics.length}</p>
             </div>
             <div className="flex items-center gap-2">
-              <IoStarSharp size={18} color={colors.yellow[600]} />
-              <p className="font-bold"> {artist.like ?? 0}</p>
+              <IoHeart size={18} color={colors.red[600]} />
+              <p className="font-semibold"> {artist.like ?? 0}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <IoPlay size={18} color={colors.blue[600]} />
+              <p className="font-semibold">0</p>
             </div>
           </div>
         </button>

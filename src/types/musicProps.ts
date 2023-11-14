@@ -13,4 +13,5 @@ export interface MusicProps {
   color: string
   isFavorite: boolean
   like: number
+  view: number
 }
