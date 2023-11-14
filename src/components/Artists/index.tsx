@@ -1,12 +1,15 @@
-import { ArtistsDataProps } from '@/types/artistsProps'
+import { ReduxProps } from '@/storage'
+import { ArtistsProps } from '@/storage/modules/artists/reducer'
+
 import { IoHeart, IoMusicalNoteSharp, IoPerson, IoPlay } from 'react-icons/io5'
+import { useSelector } from 'react-redux'
 import colors from 'tailwindcss/colors'
 
-interface ArtistsProps {
-  artists: ArtistsDataProps[]
-}
+export function Artists() {
+  const { artists } = useSelector<ReduxProps, ArtistsProps>(
+    (state) => state.artists,
+  )
 
-export function Artists({ artists }: ArtistsProps) {
   return (
     <>
       {artists.map((artist) => (
@@ -34,15 +37,15 @@ export function Artists({ artists }: ArtistsProps) {
             <p className="text-purple-600 font-bold text-lg">{artist.name}</p>
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" title="Musics">
               <IoMusicalNoteSharp size={18} color={colors.purple[600]} />
               <p className="font-semibold"> {artist.musics.length}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" title="Likes">
               <IoHeart size={18} color={colors.red[600]} />
               <p className="font-semibold"> {artist.like ?? 0}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" title="Streams">
               <IoPlay size={18} color={colors.blue[600]} />
               <p className="font-semibold">0</p>
             </div>

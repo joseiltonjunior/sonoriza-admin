@@ -3,13 +3,21 @@ import { useModal } from '@/hooks/useModal'
 import { useNavigate } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/services/firebase'
+import { useDispatch } from 'react-redux'
+import { handleSetArtists } from '@/storage/modules/artists/reducer'
+import { handleTrackListRemote } from '@/storage/modules/trackListRemote/reducer'
+import { handleSetMusicalGenres } from '@/storage/modules/musicalGenres/reducer'
 
 export function FloatMenu() {
   const { isVisible, show } = useFloatMenu()
   const { openModal } = useModal()
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const handleSignOut = async () => {
+    dispatch(handleSetArtists({ artists: [] }))
+    dispatch(handleTrackListRemote({ trackListRemote: [] }))
+    dispatch(handleSetMusicalGenres({ musicalGenres: [] }))
     await signOut(auth)
     navigate('/')
   }
