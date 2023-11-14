@@ -1,5 +1,5 @@
 import { App } from '@/App'
-import { Checkout } from '@/pages/Checkout'
+
 import { Error } from '@/pages/Error'
 import { Home } from '@/pages/Home'
 import { SignIn } from '@/pages/SignIn'
@@ -18,10 +18,6 @@ export const router = createBrowserRouter([
       {
         path: '/home',
         element: <Home />,
-      },
-      {
-        path: '/checkout',
-        element: <Checkout />,
       },
     ],
   },

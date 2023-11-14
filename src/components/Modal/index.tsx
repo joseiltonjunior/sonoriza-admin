@@ -46,7 +46,7 @@ export function Modal() {
 
         {singleButton ? (
           <Button
-            title="Fechar"
+            title="Close"
             variant="green"
             onClick={() => {
               if (confirm) confirm()
@@ -59,7 +59,7 @@ export function Modal() {
               onClick={closeModal}
               className="text-gray-700 underline text-sm font-normal hover:text-gray-700/90"
             >
-              {t('buttonBack')}
+              Back
             </button>
             <Button
               className="w-[93px]"

@@ -89,7 +89,7 @@ export function SignIn() {
                 error={errors.email}
               />
               <Input
-                label="Senha"
+                label="Password"
                 register={register}
                 name="password"
                 type="password"
@@ -99,7 +99,7 @@ export function SignIn() {
             </div>
 
             <Button
-              title="Entrar"
+              title="Sign in"
               className="mt-12 w-[252px] ml-full md:w-full"
               variant="purple"
               isLoading={isLoading}

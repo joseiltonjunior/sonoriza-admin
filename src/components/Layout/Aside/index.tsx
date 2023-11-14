@@ -1,17 +1,15 @@
 import { auth } from '@/services/firebase'
-import { ReduxProps } from '@/storage'
-import { SideMenuProps, handleSetTag } from '@/storage/modules/sideMenu/reducer'
+
 import { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 
-export function Aside() {
-  const dispatch = useDispatch()
+import { Button } from './Button'
 
+interface AsideProps {
+  isError?: boolean
+}
+
+export function Aside({ isError }: AsideProps) {
   const [isUser, setIsUser] = useState(false)
-
-  const { tag } = useSelector<ReduxProps, SideMenuProps>(
-    (state) => state.sideMenu,
-  )
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -27,58 +25,13 @@ export function Aside() {
 
   return (
     <div className="bg-gray-700 w-[350px] h-screen fixed base:hidden">
-      {isUser && (
+      {!isError && isUser && (
         <>
-          <div className="flex flex-col gap-4 p-4">
-            <button
-              onClick={() => {
-                dispatch(handleSetTag({ tag: 'musics' }))
-              }}
-              className={`w-full font-bold py-2 px-6 rounded-xl  border border-purple-600 ${
-                tag === 'musics'
-                  ? 'bg-white text-purple-600 hover:bg-white/90'
-                  : 'bg-purple-600 text-white hover:bg-purple-600/90'
-              }`}
-            >
-              Musics
-            </button>
-            <button
-              onClick={() => {
-                dispatch(handleSetTag({ tag: 'artists' }))
-              }}
-              className={`w-full font-bold py-2 px-6 rounded-xl  border border-purple-600 ${
-                tag === 'artists'
-                  ? 'bg-white text-purple-600 hover:bg-white/90'
-                  : 'bg-purple-600 text-white hover:bg-purple-600/90'
-              }`}
-            >
-              Artists
-            </button>
-            <button
-              onClick={() => {
-                dispatch(handleSetTag({ tag: 'genres' }))
-              }}
-              className={`w-full font-bold py-2 px-6 rounded-xl  border border-purple-600 ${
-                tag === 'genres'
-                  ? 'bg-white text-purple-600 hover:bg-white/90'
-                  : 'bg-purple-600 text-white hover:bg-purple-600/90'
-              }`}
-            >
-              Genres
-            </button>
-
-            <button
-              onClick={() => {
-                dispatch(handleSetTag({ tag: 'users' }))
-              }}
-              className={`w-full font-bold py-2 px-6 rounded-xl  border border-purple-600 ${
-                tag === 'users'
-                  ? 'bg-white text-purple-600 hover:bg-white/90'
-                  : 'bg-purple-600 text-white hover:bg-purple-600/90'
-              }`}
-            >
-              Users
-            </button>
+          <div className="flex flex-col gap-4 px-10 pt-4">
+            <Button currentTag="musics" />
+            <Button currentTag="artists" />
+            <Button currentTag="genres" />
+            <Button currentTag="users" />
           </div>
         </>
       )}

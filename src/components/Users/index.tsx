@@ -1,5 +1,5 @@
 import { UserDataProps } from '@/types/userProps'
-import { IoPerson } from 'react-icons/io5'
+import { IoHeart, IoPerson, IoPlay } from 'react-icons/io5'
 import colors from 'tailwindcss/colors'
 import { Select } from '../form/Select'
 import { useCallback, useMemo } from 'react'
@@ -85,6 +85,27 @@ export function Users({ users, onSuccessfully }: UsersProps) {
                 {user.displayName}
               </p>
               <p>{user.email}</p>
+
+              <div className="flex gap-2">
+                <div className="flex items-center gap-1">
+                  <IoPlay color={colors.blue[600]} />
+                  <p className="font-semibold">{0}</p>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <IoHeart color={colors.red[600]} />
+                  <p className="font-semibold">
+                    {user.favoritesMusics?.length ?? 0}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <IoPerson color={colors.green[600]} />
+                  <p className="font-semibold">
+                    {user.favoritesArtists?.length ?? 0}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
