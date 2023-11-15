@@ -1,6 +1,6 @@
 import { firestore } from '@/services/firebase'
 import { MusicResponseProps } from '@/types/musicProps'
-import { collection, getDocs, query } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { useCallback } from 'react'
 
 import { ArtistsResponseProps } from '@/types/artistsProps'
@@ -65,5 +65,35 @@ export function useFirebaseServices() {
     return musicalGenresResponse
   }
 
-  return { getArtists, getGenres, getMusics, getUsers }
+  const getMusicsById = async (ids: string[]) => {
+    const musicsResponse = [] as MusicResponseProps[]
+    const q = query(collection(firestore, 'musics'))
+
+    const querySnapshot = await getDocs(query(q, where('id', 'in', ids)))
+    querySnapshot.forEach((doc) => {
+      const musicData = doc.data() as MusicResponseProps
+      musicsResponse.push(musicData)
+    })
+
+    return musicsResponse
+  }
+
+  const getArtistById = async (id: string) => {
+    let response = {} as ArtistsResponseProps
+    const q = query(collection(firestore, 'artists'))
+
+    const querySnapshot = await getDocs(query(q, where('id', '==', id)))
+    response = querySnapshot.docs[0].data() as ArtistsResponseProps
+
+    return response
+  }
+
+  return {
+    getArtists,
+    getGenres,
+    getMusics,
+    getUsers,
+    getMusicsById,
+    getArtistById,
+  }
 }

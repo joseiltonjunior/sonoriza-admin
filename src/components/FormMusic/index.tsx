@@ -71,8 +71,11 @@ export function FormMusic({ music }: FormMusicProps) {
               const artistDoc = await getDoc(artistDocRef)
 
               if (artistDoc.exists()) {
-                const artistData = artistDoc.data()
-                const updatedMusics = [...(artistData.musics || []), data.id]
+                const artistData = artistDoc.data() as ArtistsResponseProps
+                const updatedMusics = [...artistData.musics]
+                if (!artistData.musics.includes(String(data.id))) {
+                  updatedMusics.push(String(data.id))
+                }
 
                 await updateDoc(artistDocRef, { musics: updatedMusics })
 
@@ -98,7 +101,7 @@ export function FormMusic({ music }: FormMusicProps) {
         setIsLoading(false)
         closeModal()
       } catch (error) {
-        setIsLoading(true)
+        setIsLoading(false)
         showToast(`Error updating music`, {
           type: 'error',
           theme: 'light',
@@ -109,6 +112,7 @@ export function FormMusic({ music }: FormMusicProps) {
 
   const handleSaveMusic = async (data: MusicEditDataProps) => {
     const musicsCollection = 'musics'
+    const artistsCollection = 'artists'
     setIsLoading(true)
 
     try {
@@ -118,6 +122,23 @@ export function FormMusic({ music }: FormMusicProps) {
 
       const musicsDocRef = doc(firestore, musicsCollection, id)
       await updateDoc(musicsDocRef, { id })
+
+      await Promise.all(
+        data.artists.map(async (artist) => {
+          const artistDocRef = doc(firestore, artistsCollection, artist.id)
+          const artistDoc = await getDoc(artistDocRef)
+
+          if (artistDoc.exists()) {
+            const artistData = artistDoc.data()
+            const updatedMusics = [...(artistData.musics || []), data.id]
+
+            await updateDoc(artistDocRef, { musics: updatedMusics })
+
+            const responseArtists = await getArtists()
+            dispatch(handleSetArtists({ artists: responseArtists }))
+          }
+        }),
+      )
 
       showToast('Music added successfully', {
         type: 'success',
