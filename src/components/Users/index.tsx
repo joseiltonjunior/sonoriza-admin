@@ -1,4 +1,3 @@
-import { UserDataProps } from '@/types/userProps'
 import { IoHeart, IoPerson, IoPlay } from 'react-icons/io5'
 import colors from 'tailwindcss/colors'
 import { Select } from '../form/Select'
@@ -7,14 +6,19 @@ import { useCallback, useMemo } from 'react'
 import { firestore } from '@/services/firebase'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { useToast } from '@/hooks/useToast'
+import { ReduxProps } from '@/storage'
+import { useDispatch, useSelector } from 'react-redux'
+import { UsersProps, handleSetUsers } from '@/storage/modules/users/reducer'
+import { useFirebaseServices } from '@/hooks/useFirebaseServices'
 
-interface UsersProps {
-  users: UserDataProps[]
-  onSuccessfully: () => void
-}
-
-export function Users({ users, onSuccessfully }: UsersProps) {
+export function Users() {
   const { showToast } = useToast()
+
+  const dispatch = useDispatch()
+
+  const { getUsers } = useFirebaseServices()
+
+  const { users } = useSelector<ReduxProps, UsersProps>((state) => state.users)
 
   const plainOptions = useMemo(() => {
     return [
@@ -35,28 +39,28 @@ export function Users({ users, onSuccessfully }: UsersProps) {
         if (userDoc.exists()) {
           await updateDoc(userDocRef, { plan: newPlan })
 
-          if (onSuccessfully) {
-            onSuccessfully()
-          }
+          const usersResponse = await getUsers()
+
+          dispatch(handleSetUsers({ users: usersResponse }))
 
           showToast('User plan updated successfully', {
             type: 'success',
-            theme: 'colored',
+            theme: 'light',
           })
         } else {
           showToast('User not found', {
-            type: 'error',
-            theme: 'colored',
+            type: 'warning',
+            theme: 'light',
           })
         }
       } catch (error) {
         showToast(`Error updating user plan`, {
           type: 'error',
-          theme: 'colored',
+          theme: 'light',
         })
       }
     },
-    [onSuccessfully, showToast],
+    [dispatch, getUsers, showToast],
   )
 
   return (
@@ -87,19 +91,28 @@ export function Users({ users, onSuccessfully }: UsersProps) {
               <p>{user.email}</p>
 
               <div className="flex gap-2">
-                <div className="flex items-center gap-1">
+                <div
+                  className="flex items-center gap-1 cursor-pointer"
+                  title="Streams"
+                >
                   <IoPlay color={colors.blue[600]} />
                   <p className="font-semibold">{0}</p>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div
+                  className="flex items-center gap-1 cursor-pointer"
+                  title="Favorites Musics"
+                >
                   <IoHeart color={colors.red[600]} />
                   <p className="font-semibold">
                     {user.favoritesMusics?.length ?? 0}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div
+                  className="flex items-center gap-1 cursor-pointer"
+                  title="Favorites Artists"
+                >
                   <IoPerson color={colors.green[600]} />
                   <p className="font-semibold">
                     {user.favoritesArtists?.length ?? 0}

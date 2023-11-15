@@ -1,23 +1,38 @@
-import { MusicProps } from '@/types/musicProps'
-import { useState } from 'react'
+import { MusicResponseProps } from '@/types/musicProps'
+import { useEffect, useState } from 'react'
 import { IoHeart, IoPlay } from 'react-icons/io5'
 import colors from 'tailwindcss/colors'
+import { FormMusic } from '../FormMusic'
 
-interface MusicListProps {
-  musics: MusicProps[]
-}
+import { useModal } from '@/hooks/useModal'
+import { useSelector } from 'react-redux'
+import { ReduxProps } from '@/storage'
 
-export function Musics({ musics }: MusicListProps) {
-  const [musicsFiltered, setMusicFilteres] = useState<MusicProps[]>(musics)
+import { TrackListRemoteProps } from '@/storage/modules/trackListRemote/reducer'
+
+export function Musics() {
+  const { trackListRemote } = useSelector<ReduxProps, TrackListRemoteProps>(
+    (state) => state.trackListRemote,
+  )
+
+  const [musicsFiltered, setMusicFilteres] = useState<MusicResponseProps[]>()
+
+  const { openModal } = useModal()
 
   const handleFilterMusic = (filter: string) => {
-    if (filter.length < 3) return setMusicFilteres(musics)
-    const listFiltered = musics.filter((music) =>
+    if (filter.length < 3) return setMusicFilteres(trackListRemote)
+    const listFiltered = trackListRemote.filter((music) =>
       music.title.toLowerCase().includes(filter.toLowerCase()),
     )
 
     setMusicFilteres(listFiltered)
   }
+
+  useEffect(() => {
+    if (trackListRemote) {
+      setMusicFilteres(trackListRemote)
+    }
+  }, [trackListRemote])
 
   return (
     <div>
@@ -37,7 +52,9 @@ export function Musics({ musics }: MusicListProps) {
       {musicsFiltered?.map((music) => (
         <button
           onClick={() => {
-            console.log(music)
+            openModal({
+              children: <FormMusic music={music} />,
+            })
           }}
           key={music.id}
           className={`bg-white rounded-2xl p-7 mt-8 top-5 flex border hover:border-gray-300 w-full items-center justify-between`}
@@ -53,14 +70,14 @@ export function Musics({ musics }: MusicListProps) {
             <div>
               <p className="text-purple-600 font-bold">{music.title}</p>
               <div className="flex gap-2">
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1" title="Likes">
                   <IoHeart color={colors.red[600]} />
-                  <p>{music.like ?? 0}</p>
+                  <p className="font-semibold">{music.like ?? 0}</p>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1" title="Streams">
                   <IoPlay color={colors.blue[600]} />
-                  <p>{music.view ?? 0}</p>
+                  <p className="font-semibold">{music.view ?? 0}</p>
                 </div>
               </div>
             </div>

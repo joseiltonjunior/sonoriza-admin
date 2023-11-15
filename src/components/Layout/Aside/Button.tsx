@@ -1,23 +1,19 @@
 import { ReduxProps } from '@/storage'
 import { SideMenuProps, handleSetTag } from '@/storage/modules/sideMenu/reducer'
-import { useMemo } from 'react'
 
 import { useDispatch, useSelector } from 'react-redux'
 
 interface ButtonProps {
   currentTag: 'musics' | 'artists' | 'genres' | 'users'
+  title: string
 }
 
-export function Button({ currentTag }: ButtonProps) {
+export function Button({ currentTag, title }: ButtonProps) {
   const dispatch = useDispatch()
 
   const { tag } = useSelector<ReduxProps, SideMenuProps>(
     (state) => state.sideMenu,
   )
-
-  const title = useMemo(() => {
-    return currentTag.charAt(0).toUpperCase() + currentTag.slice(1)
-  }, [currentTag])
 
   return (
     <button

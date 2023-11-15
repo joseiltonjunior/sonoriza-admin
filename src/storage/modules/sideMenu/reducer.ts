@@ -6,7 +6,7 @@ export interface SideMenuProps {
 }
 
 const initialState: SideMenuProps = {
-  tag: 'musics',
+  tag: 'artists',
 }
 
 const sideMenuSlice = createSlice({

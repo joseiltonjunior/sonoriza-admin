@@ -1,4 +1,3 @@
-import { ClientProps } from '@/types/client'
 import { twMerge } from 'tailwind-merge'
 import { ComponentProps } from 'react'
 import { FieldError, UseFormRegister } from 'react-hook-form'
@@ -33,7 +32,7 @@ export function Input({
       {mask ? (
         <MaskedInput
           {...rest}
-          {...register(name as keyof ClientProps)}
+          {...register(name)}
           mask={mask}
           onChange={onChange}
           guide={false}
@@ -46,7 +45,7 @@ export function Input({
         />
       ) : (
         <input
-          {...register(name as keyof ClientProps)}
+          {...register(name)}
           data-is-error={!!error}
           placeholder={placeholder}
           type="text"

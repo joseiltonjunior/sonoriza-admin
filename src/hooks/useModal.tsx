@@ -1,11 +1,12 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { ReactNode, createContext, useContext, useState } from 'react'
 
 interface ModalInfoProps {
-  description: string
-  confirm: () => void
+  description?: string
+  confirm?: () => void
   textConfirm?: string
-  title: string
+  title?: string
   singleButton?: boolean
+  children?: ReactNode
 }
 
 interface ModalStateProps extends ModalInfoProps {

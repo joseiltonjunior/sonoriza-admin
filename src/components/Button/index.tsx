@@ -1,6 +1,7 @@
 import { ComponentProps } from 'react'
 import { twMerge } from 'tailwind-merge'
 import ReactLoading from 'react-loading'
+import colors from 'tailwindcss/colors'
 
 interface ButtonProps extends ComponentProps<'button'> {
   title: string
@@ -31,7 +32,7 @@ export function Button({
           data-variant={variant}
           className="loading ml-auto mr-auto"
           type="bars"
-          color={variant === 'outline' ? '#C6D5DB' : '#fff'}
+          color={variant === 'outline' ? colors.purple[600] : '#fff'}
           width={20}
           height={20}
         />

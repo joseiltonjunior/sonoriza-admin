@@ -1,17 +1,25 @@
-import { ArtistsDataProps } from './artistsProps'
+import { ArtistsResponseProps, ArtistsEditDataProps } from './artistsProps'
 
-export interface MusicProps {
+export interface MusicResponseProps {
   url: string
   title: string
-  artists: ArtistsDataProps[]
+  artists: ArtistsResponseProps[]
   genre: string
   album: string
-  date: string
   artwork: string
-  duration: number
   id: string
   color: string
-  isFavorite: boolean
   like: number
   view: number
+}
+
+export interface MusicEditDataProps {
+  url: string
+  title: string
+  artists: ArtistsEditDataProps[]
+  genre: string
+  album: string
+  artwork: string
+  id?: string
+  color: string
 }
