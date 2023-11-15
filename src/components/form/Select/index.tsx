@@ -1,7 +1,7 @@
 import { ComponentProps } from 'react'
 import arrow from '@/assets/arrow-strong.svg'
 import { FieldError, UseFormRegister } from 'react-hook-form'
-import { ClientProps } from '@/types/client'
+
 import Skeleton from 'react-loading-skeleton'
 import { Option } from '@/types/optionSelect'
 
@@ -35,8 +35,8 @@ export function Select({
         <div className="relative inline-block w-full">
           {register ? (
             <select
+              {...register(name as string)}
               data-is-error={!!error}
-              {...register(name as keyof ClientProps)}
               value={value}
               onChange={onChange}
               autoComplete="none"
