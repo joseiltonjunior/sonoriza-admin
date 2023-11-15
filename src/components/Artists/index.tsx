@@ -129,7 +129,11 @@ export function Artists() {
                 </div>
               )}
             </div>
-            <p className="text-purple-600 font-bold text-lg">{artist.name}</p>
+
+            <div className="flex flex-col items-start">
+              <p className="text-purple-600 font-bold text-lg">{artist.name}</p>
+              <p>ID: {artist.id}</p>
+            </div>
           </button>
 
           <div className="flex gap-4">

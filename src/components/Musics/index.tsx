@@ -67,8 +67,9 @@ export function Musics() {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div>
+            <div className="flex flex-col items-start">
               <p className="text-purple-600 font-bold">{music.title}</p>
+              <p>ID: {music.id}</p>
               <div className="flex gap-2">
                 <div className="flex items-center gap-1" title="Likes">
                   <IoHeart color={colors.red[600]} />
