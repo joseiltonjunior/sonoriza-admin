@@ -13,6 +13,8 @@ import {
 import { useToast } from '@/hooks/useToast'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useEffect, useState } from 'react'
+import { useDispatch } from 'react-redux'
+import { handleSetAdmin } from '@/storage/modules/admin/reducer'
 
 interface SignInProps {
   email: string
@@ -31,13 +33,16 @@ export function SignIn() {
 
   const { showToast } = useToast()
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const [isLoading, setIsLoading] = useState(false)
 
   function submit(data: SignInProps) {
     setIsLoading(true)
     signInWithEmailAndPassword(auth, data.email, data.password)
-      .then(() => {
+      .then((result) => {
+        const { email, uid } = result.user
+        dispatch(handleSetAdmin({ admin: { email: email ?? '', uid } }))
         navigate(`/home`)
       })
       .catch(() => {
@@ -57,10 +62,12 @@ export function SignIn() {
   const handleVerifyUser = useCallback(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
+        const { email, uid } = user
+        dispatch(handleSetAdmin({ admin: { email: email ?? '', uid } }))
         navigate('/home')
       }
     })
-  }, [auth, navigate])
+  }, [auth, dispatch, navigate])
 
   useEffect(() => {
     handleVerifyUser()

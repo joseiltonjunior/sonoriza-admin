@@ -18,7 +18,10 @@ import { firestore } from '@/services/firebase'
 import { useModal } from '@/hooks/useModal'
 import { useDispatch, useSelector } from 'react-redux'
 import { ReduxProps } from '@/storage'
-import { ArtistsProps } from '@/storage/modules/artists/reducer'
+import {
+  ArtistsProps,
+  handleSetArtists,
+} from '@/storage/modules/artists/reducer'
 import { MusicalGenresProps } from '@/storage/modules/musicalGenres/reducer'
 import { useFirebaseServices } from '@/hooks/useFirebaseServices'
 import { handleTrackListRemote } from '@/storage/modules/trackListRemote/reducer'
@@ -35,7 +38,7 @@ export function FormMusic({ music }: FormMusicProps) {
   const [isLoading, setIsLoading] = useState(false)
 
   const { register, setValue, handleSubmit } = useForm<MusicEditDataProps>()
-  const { getMusics } = useFirebaseServices()
+  const { getMusics, getArtists } = useFirebaseServices()
   const { showToast } = useToast()
   const dispatch = useDispatch()
   const { closeModal } = useModal()
@@ -50,6 +53,7 @@ export function FormMusic({ music }: FormMusicProps) {
 
   const handleUpdateMusic = async (data: MusicEditDataProps) => {
     const musicsCollection = 'musics'
+    const artistsCollection = 'artists'
     setIsLoading(true)
 
     if (data.id) {
@@ -60,6 +64,23 @@ export function FormMusic({ music }: FormMusicProps) {
 
         if (musicsDoc.exists()) {
           await updateDoc(musicsDocRef, { ...data })
+
+          await Promise.all(
+            data.artists.map(async (artist) => {
+              const artistDocRef = doc(firestore, artistsCollection, artist.id)
+              const artistDoc = await getDoc(artistDocRef)
+
+              if (artistDoc.exists()) {
+                const artistData = artistDoc.data()
+                const updatedMusics = [...(artistData.musics || []), data.id]
+
+                await updateDoc(artistDocRef, { musics: updatedMusics })
+
+                const responseArtists = await getArtists()
+                dispatch(handleSetArtists({ artists: responseArtists }))
+              }
+            }),
+          )
 
           showToast('Music updated successfully', {
             type: 'success',

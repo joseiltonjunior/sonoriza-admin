@@ -19,8 +19,7 @@ import { Artists } from '@/components/Artists'
 
 import { Musics } from '@/components/Musics'
 import { getAuth } from 'firebase/auth'
-import { IoMusicalNoteSharp } from 'react-icons/io5'
-import colors from 'tailwindcss/colors'
+
 import { useModal } from '@/hooks/useModal'
 import {
   TrackListRemoteProps,
@@ -36,6 +35,8 @@ import {
 } from '@/storage/modules/musicalGenres/reducer'
 import { useFirebaseServices } from '@/hooks/useFirebaseServices'
 import { UsersProps, handleSetUsers } from '@/storage/modules/users/reducer'
+import { FormArtist } from '@/components/FormArtist'
+import { MusicalGenres } from '@/components/MusicalGenres'
 
 export function Home() {
   const { showToast } = useToast()
@@ -82,12 +83,6 @@ export function Home() {
         return ''
     }
   }, [tag])
-
-  const handleGetMusicByGenre = (genre: string) => {
-    const total = trackListRemote?.filter((item) => item.genre.includes(genre))
-
-    return total?.length
-  }
 
   const handleFetchData = async () => {
     try {
@@ -143,9 +138,22 @@ export function Home() {
                 title="Add"
                 variant="purple"
                 onClick={() => {
-                  openModal({
-                    children: <FormMusic />,
-                  })
+                  switch (tag) {
+                    case 'musics':
+                      openModal({
+                        children: <FormMusic />,
+                      })
+                      break
+
+                    case 'artists':
+                      openModal({
+                        children: <FormArtist />,
+                      })
+                      break
+
+                    default:
+                      break
+                  }
                 }}
               />
             </>
@@ -156,25 +164,7 @@ export function Home() {
 
         {tag === 'artists' && artists && <Artists />}
 
-        {tag === 'genres' &&
-          musicalGenres &&
-          musicalGenres.map((genre) => (
-            <button
-              onClick={() => {
-                console.log(genre)
-              }}
-              key={genre.name}
-              className={`bg-white rounded-2xl p-7 mt-8 top-5 flex gap-12 justify-between items-center border hover:border-gray-300 w-full `}
-            >
-              <p className="font-semibold text-gray-500">{genre.name}</p>
-              <div className="flex items-center gap-2" title="Musics">
-                <IoMusicalNoteSharp size={18} color={colors.purple[600]} />
-                <p className="font-semibold">
-                  {handleGetMusicByGenre(genre.name)}
-                </p>
-              </div>
-            </button>
-          ))}
+        {tag === 'genres' && musicalGenres && <MusicalGenres />}
 
         {tag === 'users' && users && <Users />}
 

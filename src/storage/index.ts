@@ -1,15 +1,23 @@
 import { configureStore } from '@reduxjs/toolkit'
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from 'redux-persist'
+import storage from 'redux-persist/lib/storage'
 
-import sideMenuReducer, { SideMenuProps } from './modules/sideMenu/reducer'
-import trackListRemoteReducer, {
-  TrackListRemoteProps,
-} from './modules/trackListRemote/reducer'
-
-import artistsReducer, { ArtistsProps } from './modules/artists/reducer'
-import musicalGenresReducers, {
-  MusicalGenresProps,
-} from './modules/musicalGenres/reducer'
-import userReducer, { UsersProps } from './modules/users/reducer'
+import { SideMenuProps } from './modules/sideMenu/reducer'
+import { TrackListRemoteProps } from './modules/trackListRemote/reducer'
+import { ArtistsProps } from './modules/artists/reducer'
+import { MusicalGenresProps } from './modules/musicalGenres/reducer'
+import { UsersProps } from './modules/users/reducer'
+import { AdminProps } from './modules/admin/reducer'
+import rootReducer from './modules/rootReducer'
 
 export interface ReduxProps {
   sideMenu: SideMenuProps
@@ -17,16 +25,26 @@ export interface ReduxProps {
   musicalGenres: MusicalGenresProps
   artists: ArtistsProps
   users: UsersProps
+  admin: AdminProps
 }
 
+const persistConfig = {
+  key: 'root',
+  storage,
+}
+
+const persistedReducer = persistReducer(persistConfig, rootReducer)
+
 const store = configureStore({
-  reducer: {
-    sideMenu: sideMenuReducer,
-    trackListRemote: trackListRemoteReducer,
-    artists: artistsReducer,
-    musicalGenres: musicalGenresReducers,
-    users: userReducer,
-  },
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }),
 })
 
-export { store }
+const persistor = persistStore(store)
+
+export { store, persistor }

@@ -5,6 +5,7 @@ import artists from './artists/reducer'
 import trackListRemote from './trackListRemote/reducer'
 import musicalGenres from './musicalGenres/reducer'
 import users from './users/reducer'
+import admin from './admin/reducer'
 
 export default combineReducers({
   sideMenu,
@@ -12,4 +13,5 @@ export default combineReducers({
   trackListRemote,
   musicalGenres,
   users,
+  admin,
 })
