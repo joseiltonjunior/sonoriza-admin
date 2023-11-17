@@ -25,6 +25,7 @@ import {
 import { MusicalGenresProps } from '@/storage/modules/musicalGenres/reducer'
 import { useFirebaseServices } from '@/hooks/useFirebaseServices'
 import { handleTrackListRemote } from '@/storage/modules/trackListRemote/reducer'
+import { FormArtist } from '../FormArtist'
 
 interface FormMusicProps {
   music?: MusicResponseProps
@@ -41,7 +42,7 @@ export function FormMusic({ music }: FormMusicProps) {
   const { getMusics, getArtists } = useFirebaseServices()
   const { showToast } = useToast()
   const dispatch = useDispatch()
-  const { closeModal } = useModal()
+  const { closeModal, openModal } = useModal()
 
   const { artists } = useSelector<ReduxProps, ArtistsProps>(
     (state) => state.artists,
@@ -112,7 +113,7 @@ export function FormMusic({ music }: FormMusicProps) {
 
   const handleSaveMusic = async (data: MusicEditDataProps) => {
     const musicsCollection = 'musics'
-    const artistsCollection = 'artists'
+
     setIsLoading(true)
 
     try {
@@ -121,24 +122,8 @@ export function FormMusic({ music }: FormMusicProps) {
       })
 
       const musicsDocRef = doc(firestore, musicsCollection, id)
+
       await updateDoc(musicsDocRef, { id })
-
-      await Promise.all(
-        data.artists.map(async (artist) => {
-          const artistDocRef = doc(firestore, artistsCollection, artist.id)
-          const artistDoc = await getDoc(artistDocRef)
-
-          if (artistDoc.exists()) {
-            const artistData = artistDoc.data()
-            const updatedMusics = [...(artistData.musics || []), data.id]
-
-            await updateDoc(artistDocRef, { musics: updatedMusics })
-
-            const responseArtists = await getArtists()
-            dispatch(handleSetArtists({ artists: responseArtists }))
-          }
-        }),
-      )
 
       showToast('Music added successfully', {
         type: 'success',
@@ -151,6 +136,7 @@ export function FormMusic({ music }: FormMusicProps) {
       setIsLoading(false)
       closeModal()
     } catch (error) {
+      console.log(error)
       setIsLoading(false)
       showToast(`Error adding music`, {
         type: 'error',
@@ -257,20 +243,34 @@ export function FormMusic({ music }: FormMusicProps) {
 
       {selectedArtists.length > 0 && (
         <div className="mb-4">
-          <p className="font-semibold mb-2">Selected artists</p>
+          <p className="font-semibold mb-2">Artists</p>
           <div className="flex gap-2">
             {selectedArtists.map((artist) => (
               <div key={artist.id} className="flex">
-                <div className="w-20 h-20 rounded-full bg-gray-700 items-center justify-center overflow-hidden">
+                <button
+                  className="flex flex-col items-center justify-center overflow-hidden"
+                  onClick={() => {
+                    openModal({
+                      children: (
+                        <FormArtist
+                          artist={artists.find((item) => item.id === artist.id)}
+                        />
+                      ),
+                    })
+                  }}
+                >
                   <img
                     src={artist.photoURL}
                     alt="photo artists"
                     title={artist.name}
-                    className="object-cover"
+                    className="object-cover w-28 h-28 rounded-xl"
                   />
-                </div>
+                  <p className="text-center text-sm font-medium">
+                    {artist.name}
+                  </p>
+                </button>
                 <button
-                  className="w-6 h-6 rounded-full bg-purple-700 items-center justify-center flex -ml-5 -mt-1 hover:bg-purple-500"
+                  className="w-6 h-6 rounded-full bg-purple-700 items-center justify-center flex -ml-4 -mt-3 hover:bg-purple-500"
                   title="Remove"
                   onClick={() => handleRemoveArtists(artist)}
                 >
@@ -345,7 +345,7 @@ export function FormMusic({ music }: FormMusicProps) {
         <div className="h-[1px] bg-gray-300/50 my-7" />
 
         <Button
-          title="Save"
+          title={music ? 'Edit' : 'Save'}
           className="max-w-[140px] ml-auto"
           variant="purple"
           isLoading={isLoading}
