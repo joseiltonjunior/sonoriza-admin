@@ -28,7 +28,7 @@ export function Musics() {
 
   const { openModal, closeModal } = useModal()
   const { showToast } = useToast()
-  const { getMusics } = useFirebaseServices()
+  const { getMusics, removeMusicFromArtists } = useFirebaseServices()
 
   const handleFilterMusic = (filter: string) => {
     if (filter.length < 3) return setMusicFilteres(trackListRemote)
@@ -39,11 +39,11 @@ export function Musics() {
     setMusicFilteres(listFiltered)
   }
 
-  const handleRemoveMusic = async (musicId: string) => {
+  const handleRemoveMusic = async (music: MusicResponseProps) => {
     const musicsCollection = 'musics'
 
-    if (musicId) {
-      const musicsDocRef = doc(firestore, musicsCollection, musicId)
+    if (music.id) {
+      const musicsDocRef = doc(firestore, musicsCollection, music.id)
 
       try {
         const musicsDoc = await getDoc(musicsDocRef)
@@ -57,6 +57,8 @@ export function Musics() {
           })
 
           closeModal()
+
+          await removeMusicFromArtists(music)
 
           const responseMusics = await getMusics()
           dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
@@ -152,7 +154,7 @@ export function Musics() {
                 title: 'Attention',
 
                 confirm() {
-                  handleRemoveMusic(music.id)
+                  handleRemoveMusic(music)
                 },
               })
             }}

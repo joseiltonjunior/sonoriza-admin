@@ -1,12 +1,23 @@
 import { firestore } from '@/services/firebase'
-import { MusicResponseProps } from '@/types/musicProps'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { MusicEditDataProps, MusicResponseProps } from '@/types/musicProps'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from 'firebase/firestore'
 import { useCallback } from 'react'
 
 import { ArtistsResponseProps } from '@/types/artistsProps'
 
 import { MusicalGenresDataProps } from '@/types/musicalGenresProps'
 import { UserDataProps } from '@/types/userProps'
+
+export const musicsCollection = 'musics'
+export const artistsCollection = 'artists'
 
 export function useFirebaseServices() {
   const getMusics = async () => {
@@ -88,6 +99,43 @@ export function useFirebaseServices() {
     return response
   }
 
+  const addMusicInArtists = async (music: MusicEditDataProps) => {
+    await Promise.all(
+      music.artists.map(async (artist) => {
+        const artistDocRef = doc(firestore, artistsCollection, artist.id)
+        const artistDoc = await getDoc(artistDocRef)
+
+        if (artistDoc.exists()) {
+          const artistData = artistDoc.data() as ArtistsResponseProps
+          const updatedMusics = artistData.musics
+          if (!artistData.musics.find((item) => item === String(music.id))) {
+            updatedMusics.push(String(music.id))
+          }
+
+          await updateDoc(artistDocRef, { musics: updatedMusics })
+        }
+      }),
+    )
+  }
+
+  const removeMusicFromArtists = async (music: MusicEditDataProps) => {
+    await Promise.all(
+      music.artists.map(async (artist) => {
+        const artistDocRef = doc(firestore, artistsCollection, artist.id)
+        const artistDoc = await getDoc(artistDocRef)
+
+        if (artistDoc.exists()) {
+          const artistData = artistDoc.data() as ArtistsResponseProps
+          const updatedMusics = artistData.musics.filter(
+            (musicId) => musicId !== String(music.id),
+          )
+
+          await updateDoc(artistDocRef, { musics: updatedMusics })
+        }
+      }),
+    )
+  }
+
   return {
     getArtists,
     getGenres,
@@ -95,5 +143,7 @@ export function useFirebaseServices() {
     getUsers,
     getMusicsById,
     getArtistById,
+    addMusicInArtists,
+    removeMusicFromArtists,
   }
 }

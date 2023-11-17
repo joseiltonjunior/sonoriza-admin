@@ -38,6 +38,7 @@ import { UsersProps, handleSetUsers } from '@/storage/modules/users/reducer'
 import { FormArtist } from '@/components/FormArtist'
 import { MusicalGenres } from '@/components/MusicalGenres'
 import { SignCloudFrontUrl } from '@/components/SignCloudFrontUrl'
+import { Graphics } from '@/components/Graphics'
 
 export function Home() {
   const { showToast } = useToast()
@@ -66,6 +67,8 @@ export function Home() {
     (state) => state.sideMenu,
   )
 
+  const excludePath = ['users', 'graphics', 'signUrl']
+
   const handleFormatTitle = useMemo(() => {
     switch (tag) {
       case 'artists':
@@ -82,6 +85,9 @@ export function Home() {
 
       case 'signUrl':
         return 'Sign CloudFront URL'
+
+      case 'graphics':
+        return 'Graphics'
 
       default:
         return ''
@@ -136,7 +142,7 @@ export function Home() {
             </h3>
           </div>
 
-          {tag !== 'users' && tag !== 'signUrl' && (
+          {!excludePath.includes(tag) && (
             <>
               <Button
                 title="Add"
@@ -173,6 +179,8 @@ export function Home() {
         {tag === 'users' && users && <Users />}
 
         {tag === 'signUrl' && <SignCloudFrontUrl />}
+
+        {tag === 'graphics' && <Graphics />}
 
         {isLoading && (
           <>

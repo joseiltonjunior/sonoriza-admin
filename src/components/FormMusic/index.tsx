@@ -23,7 +23,10 @@ import {
   handleSetArtists,
 } from '@/storage/modules/artists/reducer'
 import { MusicalGenresProps } from '@/storage/modules/musicalGenres/reducer'
-import { useFirebaseServices } from '@/hooks/useFirebaseServices'
+import {
+  musicsCollection,
+  useFirebaseServices,
+} from '@/hooks/useFirebaseServices'
 import { handleTrackListRemote } from '@/storage/modules/trackListRemote/reducer'
 import { FormArtist } from '../FormArtist'
 
@@ -39,7 +42,8 @@ export function FormMusic({ music }: FormMusicProps) {
   const [isLoading, setIsLoading] = useState(false)
 
   const { register, setValue, handleSubmit } = useForm<MusicEditDataProps>()
-  const { getMusics, getArtists } = useFirebaseServices()
+  const { getMusics, getArtists, addMusicInArtists, removeMusicFromArtists } =
+    useFirebaseServices()
   const { showToast } = useToast()
   const dispatch = useDispatch()
   const { closeModal, openModal } = useModal()
@@ -53,8 +57,6 @@ export function FormMusic({ music }: FormMusicProps) {
   )
 
   const handleUpdateMusic = async (data: MusicEditDataProps) => {
-    const musicsCollection = 'musics'
-    const artistsCollection = 'artists'
     setIsLoading(true)
 
     if (data.id) {
@@ -66,25 +68,10 @@ export function FormMusic({ music }: FormMusicProps) {
         if (musicsDoc.exists()) {
           await updateDoc(musicsDocRef, { ...data })
 
-          await Promise.all(
-            data.artists.map(async (artist) => {
-              const artistDocRef = doc(firestore, artistsCollection, artist.id)
-              const artistDoc = await getDoc(artistDocRef)
+          await addMusicInArtists(data)
 
-              if (artistDoc.exists()) {
-                const artistData = artistDoc.data() as ArtistsResponseProps
-                const updatedMusics = [...artistData.musics]
-                if (!artistData.musics.includes(String(data.id))) {
-                  updatedMusics.push(String(data.id))
-                }
-
-                await updateDoc(artistDocRef, { musics: updatedMusics })
-
-                const responseArtists = await getArtists()
-                dispatch(handleSetArtists({ artists: responseArtists }))
-              }
-            }),
-          )
+          const responseArtists = await getArtists()
+          dispatch(handleSetArtists({ artists: responseArtists }))
 
           showToast('Music updated successfully', {
             type: 'success',
@@ -112,8 +99,6 @@ export function FormMusic({ music }: FormMusicProps) {
   }
 
   const handleSaveMusic = async (data: MusicEditDataProps) => {
-    const musicsCollection = 'musics'
-
     setIsLoading(true)
 
     try {
@@ -124,6 +109,8 @@ export function FormMusic({ music }: FormMusicProps) {
       const musicsDocRef = doc(firestore, musicsCollection, id)
 
       await updateDoc(musicsDocRef, { id })
+
+      await addMusicInArtists({ ...data, id })
 
       showToast('Music added successfully', {
         type: 'success',
@@ -214,8 +201,14 @@ export function FormMusic({ music }: FormMusicProps) {
     setValue('artists', [])
   }
 
-  const handleRemoveArtists = (artist: ArtistsEditDataProps) => {
-    const filter = selectedArtists.filter((item) => item.id !== artist.id)
+  const handleRemoveArtists = async (
+    music: MusicEditDataProps,
+    artistRemoveId: string,
+  ) => {
+    await removeMusicFromArtists(music)
+    const responseArtists = await getArtists()
+    dispatch(handleSetArtists({ artists: responseArtists }))
+    const filter = selectedArtists.filter((item) => item.id !== artistRemoveId)
     setSelectedArtists(filter)
   }
 
@@ -272,7 +265,9 @@ export function FormMusic({ music }: FormMusicProps) {
                 <button
                   className="w-6 h-6 rounded-full bg-purple-700 items-center justify-center flex -ml-4 -mt-3 hover:bg-purple-500"
                   title="Remove"
-                  onClick={() => handleRemoveArtists(artist)}
+                  onClick={() =>
+                    handleRemoveArtists(music as MusicEditDataProps, artist.id)
+                  }
                 >
                   <IoClose color={'#fff'} size={14} />
                 </button>
