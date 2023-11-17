@@ -16,12 +16,14 @@ import { firestore } from '@/services/firebase'
 import { useModal } from '@/hooks/useModal'
 import { useDispatch } from 'react-redux'
 
+import { useKeenSlider } from 'keen-slider/react'
+
 import { handleSetArtists } from '@/storage/modules/artists/reducer'
 
 import { useFirebaseServices } from '@/hooks/useFirebaseServices'
 import { MusicResponseProps } from '@/types/musicProps'
 import Skeleton from 'react-loading-skeleton'
-import { IoClose } from 'react-icons/io5'
+import { FormMusic } from '../FormMusic'
 
 interface FormArtistProps {
   artist?: ArtistsResponseProps
@@ -35,7 +37,13 @@ export function FormArtist({ artist }: FormArtistProps) {
   const { getArtists, getMusicsById, getArtistById } = useFirebaseServices()
   const { showToast } = useToast()
   const dispatch = useDispatch()
-  const { closeModal } = useModal()
+  const { closeModal, openModal } = useModal()
+
+  const [sliderRef] = useKeenSlider({
+    slides: {
+      perView: 6,
+    },
+  })
 
   const handleUpdateArtist = async (data: ArtistsEditDataProps) => {
     const artistsCollection = 'artists'
@@ -127,10 +135,7 @@ export function FormArtist({ artist }: FormArtistProps) {
     }
   }
 
-  const handleRemoveMusic = (id: string) => {
-    const filter = musics?.filter((music) => music.id !== id)
-    setMusics(filter)
-  }
+  console.log(musics)
 
   useEffect(() => {
     if (artist?.id) {
@@ -147,45 +152,51 @@ export function FormArtist({ artist }: FormArtistProps) {
   }, [artist, setValue])
 
   return (
-    <>
+    <div>
       <h1 className="font-bold text-xl text-purple-600">
         {artist ? 'Edit' : 'Add new'} artist
       </h1>
       <div className="h-[1px] bg-gray-300/50 my-7" />
 
       {artist?.musics && artist.musics.length > 0 && (
-        <div className="mb-7">
+        <div>
           <p className="font-bold">Musics</p>
-          <div className="flex mt-2 gap-2">
+          <div>
             {musics ? (
-              musics.map((music) => (
-                <div key={music.id} className="flex">
-                  <div className="flex flex-col gap-2 items-center w-32">
+              <div
+                ref={sliderRef}
+                className="ken-slider flex overflow-hidden mt-2"
+              >
+                {musics.map((music) => (
+                  <button
+                    key={music.id}
+                    className="keen-slider__slide flex flex-col items-center gap-2"
+                    onClick={() => {
+                      openModal({
+                        children: <FormMusic music={music} />,
+                      })
+                    }}
+                  >
                     <img
                       src={music.artwork}
                       alt="artwork"
-                      className="h-20 w-20 rounded-full"
+                      className="rounded-xl object-cover w-28 h-28"
                     />
-                    <p className="text-center text-sm">{music.title}</p>
-                  </div>
-                  <button
-                    className="w-6 h-6 rounded-full bg-purple-700 items-center justify-center flex -ml-10 -mt-1 hover:bg-purple-500"
-                    title="Remove"
-                    onClick={() => handleRemoveMusic(music.id)}
-                  >
-                    <IoClose color={'#fff'} size={14} />
+                    <p className="text-center text-sm font-medium">
+                      {music.title}
+                    </p>
                   </button>
-                </div>
-              ))
+                ))}
+              </div>
             ) : (
               <div className="flex gap-4">
-                <div className="flex flex-col items-center">
-                  <Skeleton width={80} height={80} borderRadius={80} />
-                  <Skeleton height={16} width={108} />
+                <div className="flex flex-col gap-2 items-center">
+                  <Skeleton width={112} height={112} borderRadius={12} />
+                  <Skeleton height={16} width={112} />
                 </div>
-                <div className="flex flex-col items-center">
-                  <Skeleton width={80} height={80} borderRadius={80} />
-                  <Skeleton height={16} width={108} />
+                <div className="flex flex-col gap-2 items-center">
+                  <Skeleton width={112} height={112} borderRadius={12} />
+                  <Skeleton height={16} width={112} />
                 </div>
               </div>
             )}
@@ -193,8 +204,8 @@ export function FormArtist({ artist }: FormArtistProps) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(submit)} className="flex flex-col">
-        <div className="grid grid-cols-[250px,300px] gap-4">
+      <form onSubmit={handleSubmit(submit)} className="flex flex-col mt-4">
+        <div className="grid grid-cols-[250px,250px] gap-4">
           <Input
             placeholder="Artist name"
             label="Artist"
@@ -224,12 +235,12 @@ export function FormArtist({ artist }: FormArtistProps) {
         <div className="h-[1px] bg-gray-300/50 my-7" />
 
         <Button
-          title="Save"
+          title={artist ? 'Edit' : 'Save'}
           className="max-w-[140px] ml-auto"
           variant="purple"
           isLoading={isLoading}
         />
       </form>
-    </>
+    </div>
   )
 }

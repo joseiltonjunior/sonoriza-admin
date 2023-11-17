@@ -22,6 +22,7 @@
     "firebase": "^10.1.0",
     "i18next": "^23.3.0",
     "i18next-browser-languagedetector": "^7.1.0",
+    "keen-slider": "^6.8.6",
     "query-string": "^8.1.0",
     "react": "^18.2.0",
     "react-datepicker": "^4.16.0",

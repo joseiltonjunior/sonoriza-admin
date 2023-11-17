@@ -1,14 +1,21 @@
 import { MusicResponseProps } from '@/types/musicProps'
 import { useEffect, useState } from 'react'
-import { IoHeart, IoPlay } from 'react-icons/io5'
+import { IoHeart, IoPlay, IoTrash } from 'react-icons/io5'
 import colors from 'tailwindcss/colors'
 import { FormMusic } from '../FormMusic'
 
 import { useModal } from '@/hooks/useModal'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { ReduxProps } from '@/storage'
 
-import { TrackListRemoteProps } from '@/storage/modules/trackListRemote/reducer'
+import {
+  TrackListRemoteProps,
+  handleTrackListRemote,
+} from '@/storage/modules/trackListRemote/reducer'
+import { deleteDoc, doc, getDoc } from 'firebase/firestore'
+import { firestore } from '@/services/firebase'
+import { useToast } from '@/hooks/useToast'
+import { useFirebaseServices } from '@/hooks/useFirebaseServices'
 
 export function Musics() {
   const { trackListRemote } = useSelector<ReduxProps, TrackListRemoteProps>(
@@ -17,7 +24,11 @@ export function Musics() {
 
   const [musicsFiltered, setMusicFilteres] = useState<MusicResponseProps[]>()
 
-  const { openModal } = useModal()
+  const dispatch = useDispatch()
+
+  const { openModal, closeModal } = useModal()
+  const { showToast } = useToast()
+  const { getMusics } = useFirebaseServices()
 
   const handleFilterMusic = (filter: string) => {
     if (filter.length < 3) return setMusicFilteres(trackListRemote)
@@ -26,6 +37,42 @@ export function Musics() {
     )
 
     setMusicFilteres(listFiltered)
+  }
+
+  const handleRemoveMusic = async (musicId: string) => {
+    const musicsCollection = 'musics'
+
+    if (musicId) {
+      const musicsDocRef = doc(firestore, musicsCollection, musicId)
+
+      try {
+        const musicsDoc = await getDoc(musicsDocRef)
+
+        if (musicsDoc.exists()) {
+          await deleteDoc(musicsDocRef)
+
+          showToast('Music removed successfully', {
+            type: 'success',
+            theme: 'light',
+          })
+
+          closeModal()
+
+          const responseMusics = await getMusics()
+          dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
+        } else {
+          showToast('Artist not found', {
+            type: 'warning',
+            theme: 'light',
+          })
+        }
+      } catch (error) {
+        showToast(`Error removing artist`, {
+          type: 'error',
+          theme: 'light',
+        })
+      }
+    }
   }
 
   useEffect(() => {
@@ -50,16 +97,19 @@ export function Musics() {
       </div>
 
       {musicsFiltered?.map((music) => (
-        <button
-          onClick={() => {
-            openModal({
-              children: <FormMusic music={music} />,
-            })
-          }}
+        <div
           key={music.id}
-          className={`bg-white rounded-2xl p-7 mt-8 top-5 flex border hover:border-gray-300 w-full items-center justify-between`}
+          className={`bg-white rounded-2xl p-7 mt-8 top-5 grid grid-cols-[1fr,auto,30px] gap-12 border hover:border-gray-300 w-full items-center justify-between`}
         >
-          <div className="flex items-center gap-4">
+          <button
+            className="flex items-center gap-4"
+            title="Open music"
+            onClick={() => {
+              openModal({
+                children: <FormMusic music={music} />,
+              })
+            }}
+          >
             <div className="bg-gray-700 w-16 h-16 rounded-full overflow-hidden">
               <img
                 src={music.artwork}
@@ -82,7 +132,7 @@ export function Musics() {
                 </div>
               </div>
             </div>
-          </div>
+          </button>
 
           <div className="items-end flex flex-col">
             {music.artists.map((artist) => (
@@ -91,7 +141,25 @@ export function Musics() {
               </p>
             ))}
           </div>
-        </button>
+
+          <button
+            title="Remove"
+            className="p-2 rounded-full"
+            onClick={() => {
+              openModal({
+                textConfirm: 'Delete',
+                description: 'Do you really want to delete the music?',
+                title: 'Attention',
+
+                confirm() {
+                  handleRemoveMusic(music.id)
+                },
+              })
+            }}
+          >
+            <IoTrash size={22} color={colors.red[600]} />
+          </button>
+        </div>
       ))}
     </div>
   )

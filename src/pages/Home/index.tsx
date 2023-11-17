@@ -37,6 +37,7 @@ import { useFirebaseServices } from '@/hooks/useFirebaseServices'
 import { UsersProps, handleSetUsers } from '@/storage/modules/users/reducer'
 import { FormArtist } from '@/components/FormArtist'
 import { MusicalGenres } from '@/components/MusicalGenres'
+import { SignCloudFrontUrl } from '@/components/SignCloudFrontUrl'
 
 export function Home() {
   const { showToast } = useToast()
@@ -78,6 +79,9 @@ export function Home() {
 
       case 'users':
         return `Users`
+
+      case 'signUrl':
+        return 'Sign CloudFront URL'
 
       default:
         return ''
@@ -132,7 +136,7 @@ export function Home() {
             </h3>
           </div>
 
-          {tag !== 'users' && (
+          {tag !== 'users' && tag !== 'signUrl' && (
             <>
               <Button
                 title="Add"
@@ -167,6 +171,8 @@ export function Home() {
         {tag === 'genres' && musicalGenres && <MusicalGenres />}
 
         {tag === 'users' && users && <Users />}
+
+        {tag === 'signUrl' && <SignCloudFrontUrl />}
 
         {isLoading && (
           <>
