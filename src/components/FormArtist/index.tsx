@@ -91,6 +91,7 @@ export function FormArtist({ artist }: FormArtistProps) {
     try {
       const { id } = await addDoc(collection(firestore, artistsCollection), {
         ...data,
+        musics: [],
       })
 
       const artistsDocRef = doc(firestore, artistsCollection, id)
@@ -141,6 +142,7 @@ export function FormArtist({ artist }: FormArtistProps) {
     if (artist?.id) {
       handleGetMusics(artist.id)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artist?.id])
 
   useEffect(() => {

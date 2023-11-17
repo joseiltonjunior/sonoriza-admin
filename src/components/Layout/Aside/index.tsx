@@ -3,7 +3,7 @@ import { ReduxProps } from '@/storage'
 
 import { AdminProps } from '@/storage/modules/admin/reducer'
 import { useState } from 'react'
-import { IoLogoFirebase } from 'react-icons/io5'
+import { IoAnalytics, IoLogoFirebase } from 'react-icons/io5'
 import { SideMenuProps, handleSetTag } from '@/storage/modules/sideMenu/reducer'
 
 interface AsideProps {
@@ -72,6 +72,16 @@ export function Aside({ isError }: AsideProps) {
                 </button>
               </div>
             )}
+
+            <button
+              className={`text-white font-bold text-lg flex items-center justify-between hover:bg-purple-600 p-2 px-4 rounded-xl transition delay-75 ${
+                tag === 'graphics' && `bg-purple-600 text-white`
+              } mt-8 transition delay-75`}
+              onClick={() => dispatch(handleSetTag({ tag: 'graphics' }))}
+            >
+              Graphics
+              <IoAnalytics />
+            </button>
 
             {/* <button
               className={`text-white font-bold text-lg flex items-center justify-between hover:bg-purple-600 p-2 px-4 rounded-xl transition delay-75 ${
