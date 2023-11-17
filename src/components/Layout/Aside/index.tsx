@@ -33,7 +33,7 @@ export function Aside({ isError }: AsideProps) {
               }`}
               onClick={() => setFirebaseIsVisible(!firebaseIsVisible)}
             >
-              Firestore DB
+              Database
               <IoLogoFirebase />
             </button>
             {firebaseIsVisible && (
