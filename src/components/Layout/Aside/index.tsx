@@ -11,7 +11,7 @@ interface AsideProps {
 }
 
 export function Aside({ isError }: AsideProps) {
-  const [firebaseIsVisible, setFirebaseIsVisible] = useState(true)
+  const [firebaseIsVisible, setFirebaseIsVisible] = useState(false)
   const [awsIsVisible, setAwsIsVisible] = useState(false)
 
   const dispatch = useDispatch()
@@ -43,7 +43,7 @@ export function Aside({ isError }: AsideProps) {
               }`}
               onClick={() => setFirebaseIsVisible(!firebaseIsVisible)}
             >
-              Database
+              Firebase Database
               <IoLogoFirebase />
             </button>
             {firebaseIsVisible && (
@@ -89,7 +89,7 @@ export function Aside({ isError }: AsideProps) {
               } mt-8`}
               onClick={() => setAwsIsVisible(!awsIsVisible)}
             >
-              AWS options
+              Amazon AWS
               <IoLogoAmazon />
             </button>
             {awsIsVisible && (

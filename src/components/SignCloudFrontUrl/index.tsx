@@ -66,6 +66,7 @@ export function SignCloudFrontUrl() {
   }
 
   function handleAddUrl() {
+    if (numberOfUrls === 10) return
     setNumberOfUrls((prevNumber) => prevNumber + 1)
   }
 
@@ -118,7 +119,10 @@ export function SignCloudFrontUrl() {
             title="Clear"
             className="max-w-[140px] ml-auto"
             variant="red"
-            onClick={() => setUrlsSigned([])}
+            onClick={() => {
+              setUrlsSigned([])
+              setNumberOfUrls(1)
+            }}
           />
         </div>
       ) : (
@@ -127,7 +131,7 @@ export function SignCloudFrontUrl() {
           {[...Array(numberOfUrls)].map((_, index) => (
             <div
               key={index}
-              className="grid grid-cols-[1fr,30px,30px] items-end gap-2"
+              className="grid grid-cols-[1fr,auto] items-end gap-2"
             >
               <Input
                 placeholder={`www.sonoriza.com/${index + 1}`}
@@ -137,25 +141,27 @@ export function SignCloudFrontUrl() {
                 required
               />
 
-              {numberOfUrls === index + 1 && (
-                <button
-                  onClick={handleAddUrl}
-                  className="h-6 w-6 rounded-full bg-green-600 mb-2 flex items-center justify-center hover:bg-green-600/90"
-                  type="button"
-                >
-                  <IoAdd color={colors.white} />
-                </button>
-              )}
+              <div className="flex gap-2">
+                {numberOfUrls === index + 1 && numberOfUrls > 1 && (
+                  <button
+                    onClick={() => handleRemoveUrl()}
+                    className="h-6 w-6 rounded-full bg-red-600 mb-2 flex items-center justify-center hover:bg-red-600/90"
+                    type="button"
+                  >
+                    <IoRemove color={colors.white} />
+                  </button>
+                )}
 
-              {numberOfUrls === index + 1 && numberOfUrls > 1 && (
-                <button
-                  onClick={() => handleRemoveUrl()}
-                  className="h-6 w-6 rounded-full bg-red-600 mb-2 flex items-center justify-center hover:bg-red-600/90"
-                  type="button"
-                >
-                  <IoRemove color={colors.white} />
-                </button>
-              )}
+                {numberOfUrls === index + 1 && (
+                  <button
+                    onClick={handleAddUrl}
+                    className="h-6 w-6 rounded-full bg-green-600 mb-2 flex items-center justify-center hover:bg-green-600/90"
+                    type="button"
+                  >
+                    <IoAdd color={colors.white} />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
 
