@@ -19,6 +19,7 @@
     "@reduxjs/toolkit": "^1.9.7",
     "@vercel/analytics": "^1.0.1",
     "apexcharts": "^3.44.0",
+    "aws-sdk": "^2.1498.0",
     "axios": "^1.4.0",
     "firebase": "^10.1.0",
     "i18next": "^23.3.0",
