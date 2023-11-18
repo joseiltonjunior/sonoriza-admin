@@ -117,6 +117,9 @@ export function FormMusic({ music }: FormMusicProps) {
         theme: 'light',
       })
 
+      const responseArtists = await getArtists()
+      dispatch(handleSetArtists({ artists: responseArtists }))
+
       const responseMusics = await getMusics()
       dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
 
