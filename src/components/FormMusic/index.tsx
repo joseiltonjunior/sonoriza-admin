@@ -126,7 +126,6 @@ export function FormMusic({ music }: FormMusicProps) {
       setIsLoading(false)
       closeModal()
     } catch (error) {
-      console.log(error)
       setIsLoading(false)
       showToast(`Error adding music`, {
         type: 'error',

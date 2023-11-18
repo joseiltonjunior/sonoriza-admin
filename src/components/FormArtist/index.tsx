@@ -136,8 +136,6 @@ export function FormArtist({ artist }: FormArtistProps) {
     }
   }
 
-  console.log(musics)
-
   useEffect(() => {
     if (artist?.id) {
       handleGetMusics(artist.id)

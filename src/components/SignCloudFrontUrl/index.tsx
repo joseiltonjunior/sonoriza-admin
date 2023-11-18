@@ -5,20 +5,12 @@ import { useState } from 'react'
 import { IoAdd, IoRemove } from 'react-icons/io5'
 import colors from 'tailwindcss/colors'
 
-import AWS from 'aws-sdk'
 import { useToast } from '@/hooks/useToast'
+import Lambda from 'aws-sdk/clients/lambda'
 
 interface SignCloudFrontProps {
   url1: string
 }
-
-AWS.config.update({
-  accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY,
-  secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
-  region: 'sa-east-1',
-})
-
-const lambda = new AWS.Lambda()
 
 export function SignCloudFrontUrl() {
   const { register, handleSubmit } = useForm<SignCloudFrontProps>({
@@ -33,6 +25,8 @@ export function SignCloudFrontUrl() {
   const handleSignedUrl = async (url: string[]) => {
     const keyId = import.meta.env.VITE_CLOUD_FRONT_KEY_ID
     const privateKey = import.meta.env.VITE_CLOUD_FRONT_PRIVATE_KEY
+    const region = 'sa-east-1'
+    const lambda = new Lambda({ region })
 
     const params = {
       FunctionName: 'cloudfront-presign-url',
@@ -44,7 +38,7 @@ export function SignCloudFrontUrl() {
 
     try {
       const response = await lambda.invoke(params).promise()
-      const responseObject = JSON.parse(String(response.Payload))
+      const responseObject = await JSON.parse(String(response.Payload))
 
       setUrlsSigned((prevUrls) => [...prevUrls, responseObject.signedUrl])
       setIsLoading(false)
