@@ -23,15 +23,13 @@ export function SignCloudFrontUrl() {
   const { showToast } = useToast()
 
   const handleSignedUrl = async (url: string[]) => {
-    const keyId = import.meta.env.VITE_CLOUD_FRONT_KEY_ID
-    const privateKey = import.meta.env.VITE_CLOUD_FRONT_PRIVATE_KEY
     const region = 'sa-east-1'
     const lambda = new Lambda({ region })
 
     const params = {
       FunctionName: 'cloudfront-presign-url',
       InvocationType: 'RequestResponse',
-      Payload: JSON.stringify({ url, keyId, privateKey }),
+      Payload: JSON.stringify({ url }),
     }
 
     setIsLoading(true)
