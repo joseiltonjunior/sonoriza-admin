@@ -31,6 +31,7 @@ export interface ReduxProps {
 const persistConfig = {
   key: 'root',
   storage,
+  blacklist: ['sideMenu'],
 }
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)
