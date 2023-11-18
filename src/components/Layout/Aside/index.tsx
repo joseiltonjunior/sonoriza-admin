@@ -3,7 +3,7 @@ import { ReduxProps } from '@/storage'
 
 import { AdminProps } from '@/storage/modules/admin/reducer'
 import { useState } from 'react'
-import { IoAnalytics, IoLogoFirebase } from 'react-icons/io5'
+import { IoAnalytics, IoLogoAmazon, IoLogoFirebase } from 'react-icons/io5'
 import { SideMenuProps, handleSetTag } from '@/storage/modules/sideMenu/reducer'
 
 interface AsideProps {
@@ -12,7 +12,7 @@ interface AsideProps {
 
 export function Aside({ isError }: AsideProps) {
   const [firebaseIsVisible, setFirebaseIsVisible] = useState(true)
-  // const [awsIsVisible, setAwsIsVisible] = useState(false)
+  const [awsIsVisible, setAwsIsVisible] = useState(false)
 
   const dispatch = useDispatch()
 
@@ -29,6 +29,16 @@ export function Aside({ isError }: AsideProps) {
           <div className="flex flex-col px-10 pt-10">
             <button
               className={`text-white font-bold text-lg flex items-center justify-between hover:bg-purple-600 p-2 px-4 rounded-xl transition delay-75 ${
+                tag === 'graphics' && `bg-purple-600 text-white`
+              } mt-8 transition delay-75`}
+              onClick={() => dispatch(handleSetTag({ tag: 'graphics' }))}
+            >
+              Graphics
+              <IoAnalytics />
+            </button>
+
+            <button
+              className={`text-white font-bold text-lg flex items-center justify-between hover:bg-purple-600 p-2 px-4 rounded-xl transition delay-7 mt-8 ${
                 firebaseIsVisible && `bg-purple-600 text-white rounded-b-none`
               }`}
               onClick={() => setFirebaseIsVisible(!firebaseIsVisible)}
@@ -75,26 +85,14 @@ export function Aside({ isError }: AsideProps) {
 
             <button
               className={`text-white font-bold text-lg flex items-center justify-between hover:bg-purple-600 p-2 px-4 rounded-xl transition delay-75 ${
-                tag === 'graphics' && `bg-purple-600 text-white`
-              } mt-8 transition delay-75`}
-              onClick={() => dispatch(handleSetTag({ tag: 'graphics' }))}
-            >
-              Graphics
-              <IoAnalytics />
-            </button>
-
-            {/* <button
-              className={`text-white font-bold text-lg flex items-center justify-between hover:bg-purple-600 p-2 px-4 rounded-xl transition delay-75 ${
                 awsIsVisible && `bg-purple-600 text-white rounded-b-none`
               } mt-8`}
               onClick={() => setAwsIsVisible(!awsIsVisible)}
-              disabled
-              title="Disabled"
             >
               AWS options
               <IoLogoAmazon />
-            </button> */}
-            {/* {awsIsVisible && (
+            </button>
+            {awsIsVisible && (
               <div className="flex-col flex items-start bg-white rounded-b-xl overflow-hidden">
                 <button
                   className={`hover:bg-gray-100 w-full text-left p-2 font-medium pl-4 ${
@@ -105,7 +103,7 @@ export function Aside({ isError }: AsideProps) {
                   Sign CloudFront URL
                 </button>
               </div>
-            )} */}
+            )}
           </div>
         </>
       )}
