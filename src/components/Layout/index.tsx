@@ -17,7 +17,7 @@ export function Layout({ children, isError }: LayoutProps) {
       <Header isError={isError} />
       <div className="pt-20 flex h-screen bg-gray-200 relative">
         <Aside isError={isError} />
-        <main className="ml-[350px] w-screen py-20 px-10 md:py-10 md:px-5 base:ml-0">
+        <main className="ml-[350px] w-screen py-10 px-10 md:py-10 md:px-5 base:ml-0">
           {children}
         </main>
         <button

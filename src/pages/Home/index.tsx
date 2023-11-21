@@ -133,7 +133,7 @@ export function Home() {
 
   return (
     <Layout>
-      <div className="max-w-3xl pb-8">
+      <div className={`${tag !== 'graphics' && 'max-w-3xl'} pb-8`}>
         <div className="grid grid-cols-[1fr,80px] justify-between items-center">
           <div>
             <h1 className="font-bold text-gray-700 leading-6">Home</h1>

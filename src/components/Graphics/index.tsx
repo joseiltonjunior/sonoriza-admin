@@ -21,17 +21,16 @@ export function Graphics() {
 
   const { users } = useSelector<ReduxProps, UsersProps>((state) => state.users)
 
-  const graphicData = useMemo(() => {
-    const format = {
-      categories: ['Artists', 'Musics', 'Musical Genres', 'Users'],
-      values: [
-        artists.length,
-        trackListRemote.length,
-        musicalGenres.length,
-        users.length,
-      ],
-    }
-    return format
+  const graphicTotalData = useMemo(() => {
+    const categories = ['Artists', 'Musics', 'Musical Genres', 'Users']
+    const values = [
+      artists.length,
+      trackListRemote.length,
+      musicalGenres.length,
+      users.length,
+    ]
+
+    return { categories, values }
   }, [
     artists.length,
     musicalGenres.length,
@@ -39,23 +38,100 @@ export function Graphics() {
     users.length,
   ])
 
-  const options = {
-    xaxis: {
-      categories: graphicData.categories,
-    },
-    colors: [colors.purple[600]],
-  }
+  const graphicMusicsByGenre = useMemo(() => {
+    const categories = musicalGenres.map((genre) => genre.name)
 
-  const series = [
-    {
-      name: 'total',
-      data: graphicData.values,
-    },
-  ]
+    const values = categories.map(
+      (category) =>
+        trackListRemote.filter((music) => music.genre.includes(category))
+          .length,
+    )
+
+    return { categories, values }
+  }, [musicalGenres, trackListRemote])
+
+  const graphicArtistsByGenre = useMemo(() => {
+    const allGenres = Array.from(
+      new Set(
+        artists.flatMap((artist) =>
+          artist.musicalGenres.map((genre) => genre.name),
+        ),
+      ),
+    )
+
+    const values = allGenres.map(
+      (genre) =>
+        artists.filter((artist) =>
+          artist.musicalGenres.some((g) => g.name === genre),
+        ).length,
+    )
+
+    return { categories: allGenres, values }
+  }, [artists])
 
   return (
-    <div className="mt-8">
-      <ApexCharts options={options} series={series} type="bar" height={350} />
+    <div className="mt-8 grid grid-cols-2 gap-12">
+      <div>
+        <p className="font-bold text-lg pl-4">Total documents in DB</p>
+        <ApexCharts
+          options={{
+            xaxis: {
+              categories: graphicTotalData.categories,
+            },
+            colors: [colors.purple[600]],
+          }}
+          series={[
+            {
+              name: 'total',
+              data: graphicTotalData.values,
+            },
+          ]}
+          type="bar"
+          height={350}
+        />
+      </div>
+
+      <div />
+
+      <div>
+        <p className="font-bold text-lg pl-4">Musics by genre</p>
+        <ApexCharts
+          options={{
+            xaxis: {
+              categories: graphicMusicsByGenre.categories,
+            },
+            colors: [colors.purple[600]],
+          }}
+          series={[
+            {
+              name: 'total',
+              data: graphicMusicsByGenre.values,
+            },
+          ]}
+          type="bar"
+          height={350}
+        />
+      </div>
+
+      <div>
+        <p className="font-bold text-lg pl-4">Artists by genre</p>
+        <ApexCharts
+          options={{
+            xaxis: {
+              categories: graphicArtistsByGenre.categories,
+            },
+            colors: [colors.purple[600]],
+          }}
+          series={[
+            {
+              name: 'total',
+              data: graphicArtistsByGenre.values,
+            },
+          ]}
+          type="bar"
+          height={350}
+        />
+      </div>
     </div>
   )
 }
