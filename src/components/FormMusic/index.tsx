@@ -192,14 +192,17 @@ export function FormMusic({ music }: FormMusicProps) {
   }, [artists])
 
   const handleSelectedArtists = (artistId: string) => {
-    const { id, name, photoURL } = artists?.find(
+    const { id, name, photoURL, musicalGenres } = artists?.find(
       (artist) => artist.id === artistId,
     ) as ArtistsResponseProps
 
     const isArtistsExists = selectedArtists.find((item) => item.id === artistId)
     if (isArtistsExists) return
 
-    setSelectedArtists([...selectedArtists, { id, name, photoURL }])
+    setSelectedArtists([
+      ...selectedArtists,
+      { id, name, photoURL, musicalGenres },
+    ])
     setValue('artists', [])
   }
 

@@ -3,7 +3,7 @@ import { Button } from '@/components/Button'
 import { Input } from '@/components/form/Input'
 import { useForm } from 'react-hook-form'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import {
   ArtistsResponseProps,
@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/useToast'
 import { addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { firestore } from '@/services/firebase'
 import { useModal } from '@/hooks/useModal'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 import { useKeenSlider } from 'keen-slider/react'
 
@@ -24,6 +24,12 @@ import { useFirebaseServices } from '@/hooks/useFirebaseServices'
 import { MusicResponseProps } from '@/types/musicProps'
 import Skeleton from 'react-loading-skeleton'
 import { FormMusic } from '../FormMusic'
+import { Select } from '../form/Select'
+import { ReduxProps } from '@/storage'
+import { MusicalGenresProps } from '@/storage/modules/musicalGenres/reducer'
+import { MusicalGenresDataProps } from '@/types/musicalGenresProps'
+import { IoTrash } from 'react-icons/io5'
+import colors from 'tailwindcss/colors'
 
 interface FormArtistProps {
   artist?: ArtistsResponseProps
@@ -32,6 +38,9 @@ interface FormArtistProps {
 export function FormArtist({ artist }: FormArtistProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [musics, setMusics] = useState<MusicResponseProps[]>()
+  const [musicalGenresSelected, setMusicalGenresSelected] = useState<
+    MusicalGenresDataProps[]
+  >([])
 
   const { register, handleSubmit, setValue } = useForm<ArtistsEditDataProps>()
   const { getArtists, getMusicsById, getArtistById } = useFirebaseServices()
@@ -44,6 +53,23 @@ export function FormArtist({ artist }: FormArtistProps) {
       perView: 6,
     },
   })
+
+  const { musicalGenres } = useSelector<ReduxProps, MusicalGenresProps>(
+    (state) => state.musicalGenres,
+  )
+
+  const musicalGenresOtions = useMemo(() => {
+    const options = musicalGenres?.map((genre) => {
+      return {
+        label: genre.name,
+        value: genre.name,
+      }
+    })
+
+    if (!options) return
+
+    return [{ label: 'Select', value: '' }, ...options]
+  }, [musicalGenres])
 
   const handleUpdateArtist = async (data: ArtistsEditDataProps) => {
     const artistsCollection = 'artists'
@@ -117,11 +143,25 @@ export function FormArtist({ artist }: FormArtistProps) {
   }
 
   function submit(data: ArtistsEditDataProps) {
-    if (data.id) {
-      handleUpdateArtist(data)
+    if (musicalGenresSelected.length === 0) {
+      showToast('Select at least one musical genre', {
+        type: 'error',
+        theme: 'colored',
+      })
+
       return
     }
-    handleSaveArtist(data)
+
+    const formArtist = {
+      ...data,
+      musicalGenres: musicalGenresSelected,
+    }
+
+    if (data.id) {
+      handleUpdateArtist(formArtist)
+      return
+    }
+    handleSaveArtist(formArtist)
   }
 
   const handleGetMusics = async (id: string) => {
@@ -136,6 +176,12 @@ export function FormArtist({ artist }: FormArtistProps) {
     }
   }
 
+  const handleSelectMusicalGenre = (genre: string) => {
+    const isExists = musicalGenresSelected.find((item) => item.name === genre)
+    if (isExists) return
+    setMusicalGenresSelected((prev) => [...prev, { name: genre }])
+  }
+
   useEffect(() => {
     if (artist?.id) {
       handleGetMusics(artist.id)
@@ -148,6 +194,8 @@ export function FormArtist({ artist }: FormArtistProps) {
       setValue('id', artist.id)
       setValue('name', artist.name)
       setValue('photoURL', artist.photoURL)
+
+      setMusicalGenresSelected(artist.musicalGenres ?? [])
     }
   }, [artist, setValue])
 
@@ -204,8 +252,36 @@ export function FormArtist({ artist }: FormArtistProps) {
         </div>
       )}
 
+      {musicalGenresSelected.length > 0 && (
+        <div className="mt-4">
+          <p className="font-bold">Musical Genres</p>
+          <div className="grid grid-cols-6 gap-2 mt-2">
+            {musicalGenresSelected.map((genre) => (
+              <div
+                key={genre.name}
+                className="bg-transparent border border-purple-600 p-2 rounded-lg flex items-center justify-center relative overflow-hidden h-16"
+              >
+                <button
+                  className="absolute right-0 top-0 bg-purple-600 p-1 rounded-bl-md hover:bg-purple-700"
+                  onClick={() => {
+                    setMusicalGenresSelected((prev) =>
+                      prev.filter((item) => item.name !== genre.name),
+                    )
+                  }}
+                >
+                  <IoTrash color={colors.white} size={12} />
+                </button>
+                <p className="text-purple-600 font-semibold text-center">
+                  {genre.name}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit(submit)} className="flex flex-col mt-4">
-        <div className="grid grid-cols-[250px,250px] gap-4">
+        <div className="grid grid-cols-[1fr,1fr,1fr] gap-4">
           <Input
             placeholder="Artist name"
             label="Artist"
@@ -223,6 +299,14 @@ export function FormArtist({ artist }: FormArtistProps) {
               disabled
             />
           )}
+          <Select
+            options={musicalGenresOtions}
+            label="Musical Genrer"
+            name="musicalGenres"
+            register={register}
+            onChange={(e) => handleSelectMusicalGenre(e.currentTarget.value)}
+            required
+          />
         </div>
         <Input
           placeholder="www.sonoriza.com"
