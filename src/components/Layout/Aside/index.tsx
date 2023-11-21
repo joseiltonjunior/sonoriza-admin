@@ -56,14 +56,7 @@ export function Aside({ isError }: AsideProps) {
                 >
                   Artists
                 </button>
-                <button
-                  className={`hover:bg-gray-100 w-full text-left p-2 font-medium pl-4 ${
-                    tag === 'genres' && 'bg-gray-100'
-                  }`}
-                  onClick={() => dispatch(handleSetTag({ tag: 'genres' }))}
-                >
-                  Musical Genres
-                </button>
+
                 <button
                   className={`hover:bg-gray-100 w-full text-left p-2 font-medium pl-4 ${
                     tag === 'musics' && 'bg-gray-100'
@@ -72,6 +65,15 @@ export function Aside({ isError }: AsideProps) {
                 >
                   Musics
                 </button>
+                <button
+                  className={`hover:bg-gray-100 w-full text-left p-2 font-medium pl-4 ${
+                    tag === 'genres' && 'bg-gray-100'
+                  }`}
+                  onClick={() => dispatch(handleSetTag({ tag: 'genres' }))}
+                >
+                  Musical Genres
+                </button>
+
                 <button
                   className={`hover:bg-gray-100 w-full text-left p-2 font-medium pl-4 ${
                     tag === 'users' && 'bg-gray-100'
