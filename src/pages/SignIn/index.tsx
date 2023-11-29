@@ -5,16 +5,15 @@ import { useForm } from 'react-hook-form'
 import { signInSchema } from './tokenSchema'
 import { Layout } from '@/components/Layout'
 
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-} from 'firebase/auth'
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import { useToast } from '@/hooks/useToast'
 import { useNavigate } from 'react-router-dom'
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { handleSetAdmin } from '@/storage/modules/admin/reducer'
+import { collection, doc, getDoc } from 'firebase/firestore'
+import { firestore } from '@/services/firebase'
+import { AdminProps } from '@/types/adminsProps'
 
 interface SignInProps {
   email: string
@@ -37,41 +36,54 @@ export function SignIn() {
 
   const [isLoading, setIsLoading] = useState(false)
 
+  const auth = getAuth()
+
+  async function handleFetchDataUser(uid: string) {
+    const docRef = doc(collection(firestore, 'admins'), uid)
+
+    getDoc(docRef)
+      .then((docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const adminResponse = docSnapshot.data() as AdminProps
+          dispatch(handleSetAdmin({ admin: adminResponse }))
+          navigate(`/home`, { replace: true })
+          showToast(`Welcome Back ${adminResponse.name?.split(' ')[0]}.`, {
+            type: 'info',
+            theme: 'light',
+          })
+        } else {
+          showToast('Access denied', {
+            type: 'error',
+            theme: 'light',
+          })
+        }
+      })
+      .catch(() => {
+        showToast('Access denied', {
+          type: 'error',
+          theme: 'light',
+        })
+      })
+  }
+
   function submit(data: SignInProps) {
     setIsLoading(true)
     signInWithEmailAndPassword(auth, data.email, data.password)
-      .then((result) => {
-        const { email, uid } = result.user
-        dispatch(handleSetAdmin({ admin: { email: email ?? '', uid } }))
-        navigate(`/home`)
+      .then(async (result) => {
+        const { uid } = result.user
+        handleFetchDataUser(uid)
       })
       .catch(() => {
-        setError('email', { message: '* credenciais inválidas' })
-        setError('password', { message: '* credenciais inválidas' })
+        setError('email', { message: '* invalid credentials' })
+        setError('password', { message: '* invalid credentials' })
 
-        showToast('Credenciais inválidas', {
+        showToast('Invalid credentials', {
           type: 'error',
-          theme: 'colored',
+          theme: 'light',
         })
       })
       .finally(() => setIsLoading(false))
   }
-
-  const auth = getAuth()
-
-  const handleVerifyUser = useCallback(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const { email, uid } = user
-        dispatch(handleSetAdmin({ admin: { email: email ?? '', uid } }))
-        navigate('/home')
-      }
-    })
-  }, [auth, dispatch, navigate])
-
-  useEffect(() => {
-    handleVerifyUser()
-  }, [handleVerifyUser])
 
   return (
     <Layout isError>

@@ -69,47 +69,77 @@ export function Graphics() {
     return { categories: allGenres, values }
   }, [artists])
 
+  const totalItems = graphicTotalData.values.reduce(
+    (acc, value) => acc + value,
+    0,
+  )
+
   return (
     <div className="mt-8 grid grid-cols-2 gap-12">
       <div>
         <p className="font-bold text-lg pl-4">Total documents in DB</p>
         <ApexCharts
           options={{
-            xaxis: {
-              categories: graphicTotalData.categories,
+            labels: graphicTotalData.categories,
+            colors: [
+              colors.purple[600],
+              colors.blue[600],
+              colors.green[600],
+              colors.orange[600],
+            ],
+            plotOptions: {
+              pie: {
+                donut: {
+                  labels: {
+                    show: true,
+                    total: {
+                      show: true,
+                      label: 'Total Items',
+                      formatter: () => totalItems.toString(),
+                    },
+                  },
+                },
+              },
             },
-            colors: [colors.purple[600]],
           }}
-          series={[
-            {
-              name: 'total',
-              data: graphicTotalData.values,
-            },
-          ]}
-          type="bar"
-          height={350}
+          series={graphicTotalData.values}
+          type="donut"
+          height={300}
         />
       </div>
-
-      <div />
 
       <div>
         <p className="font-bold text-lg pl-4">Musics by genre</p>
         <ApexCharts
           options={{
-            xaxis: {
-              categories: graphicMusicsByGenre.categories,
+            labels: graphicMusicsByGenre.categories,
+            colors: [
+              colors.purple[600],
+              colors.blue[600],
+              colors.green[600],
+              colors.orange[600],
+            ],
+            plotOptions: {
+              pie: {
+                donut: {
+                  labels: {
+                    show: true,
+                    total: {
+                      show: true,
+                      label: 'Total Musics',
+                      formatter: () =>
+                        graphicMusicsByGenre.values
+                          .reduce((acc, value) => acc + value, 0)
+                          .toString(),
+                    },
+                  },
+                },
+              },
             },
-            colors: [colors.purple[600]],
           }}
-          series={[
-            {
-              name: 'total',
-              data: graphicMusicsByGenre.values,
-            },
-          ]}
-          type="bar"
-          height={350}
+          series={graphicMusicsByGenre.values}
+          type="donut"
+          height={300}
         />
       </div>
 
@@ -117,19 +147,34 @@ export function Graphics() {
         <p className="font-bold text-lg pl-4">Artists by genre</p>
         <ApexCharts
           options={{
-            xaxis: {
-              categories: graphicArtistsByGenre.categories,
+            labels: graphicArtistsByGenre.categories,
+            colors: [
+              colors.purple[600],
+              colors.blue[600],
+              colors.green[600],
+              colors.orange[600],
+            ],
+            plotOptions: {
+              pie: {
+                donut: {
+                  labels: {
+                    show: true,
+                    total: {
+                      show: true,
+                      label: 'Total Artists',
+                      formatter: () =>
+                        graphicArtistsByGenre.values
+                          .reduce((acc, value) => acc + value, 0)
+                          .toString(),
+                    },
+                  },
+                },
+              },
             },
-            colors: [colors.purple[600]],
           }}
-          series={[
-            {
-              name: 'total',
-              data: graphicArtistsByGenre.values,
-            },
-          ]}
-          type="bar"
-          height={350}
+          series={graphicArtistsByGenre.values}
+          type="donut"
+          height={300}
         />
       </div>
     </div>

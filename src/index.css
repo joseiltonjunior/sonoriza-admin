@@ -74,6 +74,8 @@
         @apply bg-blue-400 text-white z-10 rounded-r-2xl;
     }
 
-
+    .drop-archives {
+        @apply h-[71px] rounded border-dashed border-2 border-purple-600 px-4 py-3 mt-4 flex items-center justify-between cursor-pointer hover:border-purple-600/60
+    }
 
 }

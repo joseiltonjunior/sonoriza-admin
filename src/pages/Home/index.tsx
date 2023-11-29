@@ -39,6 +39,7 @@ import { FormArtist } from '@/components/FormArtist'
 import { MusicalGenres } from '@/components/MusicalGenres'
 import { SignCloudFrontUrl } from '@/components/SignCloudFrontUrl'
 import { Graphics } from '@/components/Graphics'
+import { Upload } from '@/components/Upload/List'
 
 export function Home() {
   const { showToast } = useToast()
@@ -67,7 +68,7 @@ export function Home() {
     (state) => state.sideMenu,
   )
 
-  const excludePath = ['users', 'graphics', 'signUrl']
+  const excludePath = ['users', 'graphics', 'signUrl', 'upload']
 
   const handleFormatTitle = useMemo(() => {
     switch (tag) {
@@ -88,6 +89,9 @@ export function Home() {
 
       case 'graphics':
         return 'Graphics'
+
+      case 'upload':
+        return 'Upload Archives S3'
 
       default:
         return ''
@@ -181,6 +185,8 @@ export function Home() {
         {tag === 'signUrl' && <SignCloudFrontUrl />}
 
         {tag === 'graphics' && <Graphics />}
+
+        {tag === 'upload' && <Upload />}
 
         {isLoading && (
           <>

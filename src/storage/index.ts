@@ -16,7 +16,7 @@ import { TrackListRemoteProps } from './modules/trackListRemote/reducer'
 import { ArtistsProps } from './modules/artists/reducer'
 import { MusicalGenresProps } from './modules/musicalGenres/reducer'
 import { UsersProps } from './modules/users/reducer'
-import { AdminProps } from './modules/admin/reducer'
+import { AdminDataProps } from './modules/admin/reducer'
 import rootReducer from './modules/rootReducer'
 
 export interface ReduxProps {
@@ -25,7 +25,7 @@ export interface ReduxProps {
   musicalGenres: MusicalGenresProps
   artists: ArtistsProps
   users: UsersProps
-  admin: AdminProps
+  admin: AdminDataProps
 }
 
 const persistConfig = {
