@@ -35,6 +35,8 @@ export function Artists({
     handleSignedUrl,
   } = useUpload()
 
+  const DOMAIN_CLOUDFRONT = import.meta.env.VITE_CLOUD_FRONT_DOMAIN
+
   if (isLoading && !files) {
     return <Skeleton height={200} width={700} />
   }
@@ -126,7 +128,7 @@ export function Artists({
               className="hover:underline flex gap-2 text-gray-700 items-center"
               key={index}
               onClick={() => {
-                handleSignedUrl(import.meta.env.VITE_CLOUD_FRONT_DOMAIN + item)
+                handleSignedUrl(DOMAIN_CLOUDFRONT + item)
               }}
             >
               <IoImage />
