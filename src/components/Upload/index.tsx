@@ -1,224 +1,245 @@
-// import { useModal } from '@/hooks/useModal'
-// import { useToast } from '@/hooks/useToast'
-// import { ChangeEvent, DragEvent, useEffect, useRef, useState } from 'react'
-// import { useTranslation } from 'react-i18next'
-import AWS from 'aws-sdk'
+import { useModal } from '@/hooks/useModal'
+import { useToast } from '@/hooks/useToast'
+
+import * as yup from 'yup'
+
 import { useEffect, useState } from 'react'
+import { IoFolderOpenSharp } from 'react-icons/io5'
+import { Button } from '../Button'
 
-// import colors from 'tailwindcss/colors'
+import { Input } from '../form/Input'
 
-// interface FileWithType extends File {
-//   type: string
-// }
+import { yupResolver } from '@hookform/resolvers/yup'
+import { useForm } from 'react-hook-form'
+import {
+  CreatePasteFormProps,
+  FileWithType,
+  useUpload,
+} from '@/hooks/useUpload'
+import { Artists } from './Artists'
+import { Musics } from './Musics'
+
+const formValidator = yup.object().shape({
+  folderName: yup.string().required('Name is required'),
+})
 
 export function Upload() {
-  //   const [files, setFiles] = useState<FileWithType[]>([])
-  //   const fileInputRef = useRef<HTMLInputElement>(null)
-
   const [folders, setFolders] = useState<string[]>([])
   const [subFolders, setSubFolders] = useState<string[]>([])
-
-  //   const { t } = useTranslation()
-
-  //   const { showToast } = useToast()
-
-  //   const { openModal } = useModal()
-
-  //   function handleDrop(e: DragEvent<HTMLDivElement>) {
-  //     e.preventDefault()
-  //     const newFiles = Array.from(e.dataTransfer.files).filter((file) =>
-  //       ['image/jpg', 'image/jpeg', 'image/png', 'audio/mpeg'].includes(
-  //         file.type,
-  //       ),
-  //     ) as FileWithType[]
-
-  //     if (newFiles.length === 0) {
-  //       showToast('Tipo de arquivo não suportado!', {
-  //         type: 'error',
-  //         theme: 'colored',
-  //       })
-  //     } else {
-  //       setFiles((prevFiles) => [...prevFiles, ...newFiles])
-  //     }
-  //   }
-
-  //   function handleFileInputChange(e: ChangeEvent<HTMLInputElement>) {
-  //     const newFiles = Array.from(e.target.files || []).filter((file) =>
-  //       ['image/jpg', 'image/jpeg', 'image/png', 'audio/mpeg'].includes(
-  //         file.type,
-  //       ),
-  //     ) as FileWithType[]
-  //     setFiles((prevFiles) => [...prevFiles, ...newFiles])
-  //   }
-
-  //   function handleOpenFileExplorer() {
-  //     fileInputRef.current?.click()
-  //   }
-
-  //   function handleClickableArea() {
-  //     handleOpenFileExplorer()
-  //   }
-
-  //   function handleRemoveFile(index: number) {
-  //     setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index))
-  //   }
-
-  //   function formatBytes(bytes: number) {
-  //     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-  //     if (bytes === 0) return '0 Byte'
-  //     const i = parseInt(String(Math.floor(Math.log(bytes) / Math.log(1024))))
-  //     return Math.round(bytes / Math.pow(1024, i)) + ' ' + sizes[i]
-  //   }
-
-  //   function formatDate(timestamp: number) {
-  //     const date = new Date(timestamp)
-  //     const options: Intl.DateTimeFormatOptions = {
-  //       day: 'numeric',
-  //       month: 'short',
-  //       year: 'numeric',
-  //     }
-  //     return date.toLocaleDateString('pt-br', options)
-  //   }
-
-  //   const [folders, setFolders] = useState<string[]>([])
   const [selectedFolder, setSelectedFolder] = useState('')
+  const [folderItems, setFolderItems] = useState<string[]>([])
+  const [isArtist, setIsArtist] = useState('')
+  const [isDrop, setIsDrop] = useState(false)
+  const [files, setFiles] = useState<FileWithType[]>([])
 
-  const fetchS3Folders = async (prefix = '') => {
-    const s3 = new AWS.S3()
-    const bucketName = 'sonoriza-media'
+  const { openModal, closeModal } = useModal()
 
-    const params = {
-      Bucket: bucketName,
-      Delimiter: '/',
-      Prefix: prefix,
-    }
+  const { showToast } = useToast()
+  const {
+    fetchRootPaste,
+    createFolder,
+    handleFolderClick,
+    handleSubFolderClick,
+  } = useUpload()
 
+  const {
+    register,
+    handleSubmit,
+    clearErrors,
+    reset,
+    formState: { errors },
+  } = useForm<CreatePasteFormProps>({
+    resolver: yupResolver(formValidator),
+  })
+
+  const handleFetchRootPaste = async () => {
     try {
-      const response = await s3.listObjectsV2(params).promise()
-
-      // Coleta os prefixes (pastas) da resposta
-      const newFolders =
-        response.CommonPrefixes?.map((commonPrefix) => commonPrefix.Prefix) ||
-        []
-      return newFolders as string[]
+      const response = await fetchRootPaste()
+      setFolders(response)
     } catch (error) {
-      console.error('Erro ao listar pastas:', error)
-      return []
-    }
-  }
-
-  const handleFolderClick = async (folder: string) => {
-    // Verifica se já carregamos as subpastas dessa pasta
-    if (!folders.includes(folder)) {
-      const subFolders = await fetchS3Folders(folder)
-      setFolders((prevFolders) => [...prevFolders, folder, ...subFolders])
-    }
-
-    // Atualiza o estado para a pasta selecionada
-    setSelectedFolder(folder)
-  }
-
-  const handleGetArchives = () => {
-    // Inicialmente, carrega as pastas principais
-    fetchS3Folders()
-      .then((initialFolders) => {
-        console.log(initialFolders)
-        setFolders(initialFolders)
+      showToast('Error fetch root S3 paste', {
+        type: 'error',
+        theme: 'light',
       })
-      .catch((error) =>
-        console.error('Erro ao carregar pastas principais:', error),
-      )
+    }
+  }
+
+  const onSubmit = async (data: CreatePasteFormProps) => {
+    const { folderName } = data
+    const response = await createFolder({ folderName, selectedFolder })
+    setSubFolders(response)
+    closeModal()
+    reset()
   }
 
   useEffect(() => {
-    handleGetArchives()
+    handleFetchRootPaste()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
     <div>
-      {/* {files.length > 0 && (
-        <div>
-          <div className="h-[1px] bg-gray-300/50 my-7" />
-          <ul>
-            {files.map((file, index) => (
-              <li
-                key={index}
-                className="h-[71px] rounded border-2 border-dashed border-purple-600 px-4 py-3 mt-4 flex items-center"
-              >
-                {file.type.startsWith('image/') ? (
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={file.name}
-                    className="w-12 h-12 mr-2 rounded-full"
-                  />
-                ) : (
-                  <IoMusicalNoteSharp color={colors.gray[700]} size={48} />
-                )}
-
-                <div className="ml-2">
-                  <p className="font-medium text-sm">{file.name}</p>
-                  <span className="text-[#71839B] text-xs font-normal">
-                    {formatBytes(file.size)} - {formatDate(file.lastModified)}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    openModal({
-                      title: t('modal.title'),
-                      description: t('modal.description'),
-                      confirm() {
-                        handleRemoveFile(index)
-                      },
-                    })
-                  }}
-                  className="ml-auto hove"
-                >
-                  <IoTrash color={colors.red[600]} size={20} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )} */}
-
       <div className="h-[1px] bg-gray-300/50 my-7" />
 
-      <div className="flex flex-col items-start">
-        {folders.map((item) => (
-          <button key={item} onClick={() => handleFolderClick(item)}>
-            {item === selectedFolder ? <strong>{item}</strong> : item}
-          </button>
-        ))}
-      </div>
+      {selectedFolder && (
+        <div className="flex gap-1">
+          <div className="flex gap-1 items-center">
+            <button
+              className="hover:text-purple-600 font-bold"
+              onClick={() => {
+                setIsArtist('')
+                setSelectedFolder('')
+                setFiles([])
+              }}
+            >
+              Bucket
+            </button>
+            <p>/</p>
 
-      {/* <div
-        className="drop-archives"
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={handleDrop}
-        onClick={handleClickableArea}
-      >
-        <div className="text-center">
-          <p
-            className="font-normal text-[13px] text-[#404554]"
-            dangerouslySetInnerHTML={{ __html: t('attachFile.info') }}
-          />
-          <span className="font-normal text-xs text-[#9EA1B0]">
-            {t('attachFile.description')}
-          </span>
+            {selectedFolder && (
+              <button
+                onClick={() => {
+                  setIsArtist('')
+                  setFiles([])
+                }}
+                className="hover:underline"
+              >
+                {selectedFolder.split('/')[0]}
+              </button>
+            )}
+
+            {isArtist && (
+              <button onClick={() => {}} className="flex gap-1">
+                / <p className="hover:underline"> {isArtist}</p>
+              </button>
+            )}
+          </div>
+
+          {!isArtist && selectedFolder.includes('musics') && (
+            <button
+              className="ml-auto py-1 px-2 bg-purple-600 rounded-md text-white font-bold hover:bg-purple-700"
+              onClick={() =>
+                openModal({
+                  title: 'Create paste',
+                  small: true,
+                  children: (
+                    <div className="w-full flex-1 flex flex-col justify-between">
+                      <form onSubmit={handleSubmit(onSubmit)}>
+                        <Input
+                          label="Paste name"
+                          name="folderName"
+                          register={register}
+                          type="text"
+                          error={errors.folderName}
+                          placeholder="Enter paste name"
+                        />
+                        <div className="flex gap-2 mt-4">
+                          <Button
+                            type="button"
+                            title="Cancel"
+                            variant="outline"
+                            onClick={() => {
+                              closeModal()
+                              clearErrors()
+                            }}
+                          />
+                          <Button
+                            type="submit"
+                            title="Create"
+                            variant="purple"
+                          />
+                        </div>
+                      </form>
+                    </div>
+                  ),
+                })
+              }
+            >
+              Add paste
+            </button>
+          )}
         </div>
-        <div className="border p-1 border-blue-400 rounded-full">
-          <IoArrowBack />
-          <input
-            type="file"
-            accept=".pdf, .doc, .docx, .jpg, .jpeg, .png, .xls, .xlsx"
-            style={{ display: 'none' }}
-            ref={fileInputRef}
-            onChange={handleFileInputChange}
+      )}
+
+      <div className="flex flex-col items-start mt-4">
+        {!selectedFolder &&
+          folders.map((item, index) => (
+            <button
+              className="hover:underline flex gap-2 items-center text-gray-700"
+              key={index}
+              onClick={() => {
+                setSubFolders([])
+                setFolderItems([])
+
+                setSelectedFolder(item)
+
+                if (item.includes('artists')) {
+                  handleSubFolderClick({
+                    folder: item,
+                    setFolderItems,
+                  })
+                  return
+                }
+
+                handleFolderClick({
+                  folder: item,
+                  setSubFolders,
+                })
+              }}
+            >
+              <IoFolderOpenSharp />
+              {item === selectedFolder ? <strong>{item}</strong> : item}
+            </button>
+          ))}
+
+        {selectedFolder.includes('musics') && !isArtist && (
+          <div className="flex flex-col items-start rounded border-2 border-dashed border-purple-600 p-6 w-full">
+            {subFolders.map((item, index) => (
+              <button
+                className="hover:underline flex gap-2 text-gray-700 items-center"
+                key={index}
+                onClick={() => {
+                  setIsArtist(item.replace('musics/', '').replace('/', ''))
+
+                  handleSubFolderClick({
+                    folder: item,
+                    setFolderItems,
+                  })
+                }}
+              >
+                <IoFolderOpenSharp />
+                {item.replace('musics/', '')}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {isArtist && selectedFolder.includes('musics') && (
+          <Musics
+            folderItems={folderItems}
+            files={files}
+            isDrop={isDrop}
+            selectedFolder={selectedFolder}
+            setIsDrop={setIsDrop}
+            setFiles={setFiles}
+            isArtist={isArtist}
+            subFolders={subFolders}
+            setFolderItems={setFolderItems}
           />
-        </div>
-      </div> */}
+        )}
+
+        {selectedFolder.includes('artists') && (
+          <Artists
+            folderItems={folderItems}
+            files={files}
+            isDrop={isDrop}
+            selectedFolder={selectedFolder}
+            setIsDrop={setIsDrop}
+            setFiles={setFiles}
+            setFolderItems={setFolderItems}
+          />
+        )}
+      </div>
     </div>
   )
 }

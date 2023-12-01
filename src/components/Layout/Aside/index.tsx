@@ -104,7 +104,7 @@ export function Aside({ isError }: AsideProps) {
                   }`}
                   onClick={() => dispatch(handleSetTag({ tag: 'upload' }))}
                 >
-                  Upload S3
+                  Bucket S3
                 </button>
                 <button
                   className={`hover:bg-gray-100 w-full text-left p-2 font-medium pl-4 ${

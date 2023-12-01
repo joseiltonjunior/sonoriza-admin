@@ -39,7 +39,7 @@ import { FormArtist } from '@/components/FormArtist'
 import { MusicalGenres } from '@/components/MusicalGenres'
 import { SignCloudFrontUrl } from '@/components/SignCloudFrontUrl'
 import { Graphics } from '@/components/Graphics'
-import { Upload } from '@/components/Upload/List'
+import { Upload } from '@/components/Upload'
 
 export function Home() {
   const { showToast } = useToast()
@@ -91,7 +91,7 @@ export function Home() {
         return 'Graphics'
 
       case 'upload':
-        return 'Upload Archives S3'
+        return 'Bucket S3'
 
       default:
         return ''

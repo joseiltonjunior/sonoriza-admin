@@ -30,9 +30,7 @@ export function Modal() {
         className="bg-gray-700/80 h-full w-full absolute"
       />
       <div
-        className={`${
-          children ? 'max-w-[800px]' : 'max-w-[451px]'
-        } bg-white  w-full min-h-[191px] z-10 rounded-[20px] p-6  flex flex-col justify-between relative`}
+        className={`bg-white min-w-[410px] w-auto min-h-[191px] z-10 rounded-[20px] p-6  flex flex-col justify-between relative`}
       >
         <button
           className="bg-purple-600 absolute -top-3 -right-3 w-9 h-9 rounded-full flex items-center justify-center "
