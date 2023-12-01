@@ -44,6 +44,8 @@ export function Musics({
     handleUploadObject,
   } = useUpload()
 
+  const DOMAIN_CLOUDFRONT = import.meta.env.VITE_CLOUD_FRONT_DOMAIN
+
   if (isLoading && !files) {
     return <Skeleton height={200} width={700} />
   }
@@ -201,9 +203,7 @@ export function Musics({
                   className="hover:underline text-left flex gap-2 text-gray-700 items-center"
                   key={index}
                   onClick={() => {
-                    handleSignedUrl(
-                      import.meta.env.VITE_CLOUD_FRONT_DOMAIN + file,
-                    )
+                    handleSignedUrl(DOMAIN_CLOUDFRONT + file)
                   }}
                 >
                   {file.endsWith('mp3') ? <IoMusicalNote /> : <IoImage />}
