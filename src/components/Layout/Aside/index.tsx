@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux'
 import { ReduxProps } from '@/storage'
 
-import { AdminProps } from '@/storage/modules/admin/reducer'
+import { AdminDataProps } from '@/storage/modules/admin/reducer'
 import { useState } from 'react'
 import { IoAnalytics, IoLogoAmazon, IoLogoFirebase } from 'react-icons/io5'
 import { SideMenuProps, handleSetTag } from '@/storage/modules/sideMenu/reducer'
@@ -16,7 +16,9 @@ export function Aside({ isError }: AsideProps) {
 
   const dispatch = useDispatch()
 
-  const { admin } = useSelector<ReduxProps, AdminProps>((state) => state.admin)
+  const { admin } = useSelector<ReduxProps, AdminDataProps>(
+    (state) => state.admin,
+  )
 
   const { tag } = useSelector<ReduxProps, SideMenuProps>(
     (state) => state.sideMenu,
@@ -24,7 +26,7 @@ export function Aside({ isError }: AsideProps) {
 
   return (
     <div className="bg-gray-700 w-[350px] h-screen fixed base:hidden">
-      {!isError && admin.uid && (
+      {!isError && admin.id && (
         <>
           <div className="flex flex-col px-10 pt-10">
             <button
@@ -96,6 +98,14 @@ export function Aside({ isError }: AsideProps) {
             </button>
             {awsIsVisible && (
               <div className="flex-col flex items-start bg-white rounded-b-xl overflow-hidden">
+                <button
+                  className={`hover:bg-gray-100 w-full text-left p-2 font-medium pl-4 ${
+                    tag === 'upload' && 'bg-gray-100'
+                  }`}
+                  onClick={() => dispatch(handleSetTag({ tag: 'upload' }))}
+                >
+                  Bucket S3
+                </button>
                 <button
                   className={`hover:bg-gray-100 w-full text-left p-2 font-medium pl-4 ${
                     tag === 'signUrl' && 'bg-gray-100'

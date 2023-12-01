@@ -2,7 +2,14 @@ import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
 export interface SideMenuProps {
-  tag: 'musics' | 'artists' | 'genres' | 'users' | 'signUrl' | 'graphics'
+  tag:
+    | 'musics'
+    | 'artists'
+    | 'genres'
+    | 'users'
+    | 'signUrl'
+    | 'graphics'
+    | 'upload'
 }
 
 const initialState: SideMenuProps = {

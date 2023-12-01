@@ -7,6 +7,7 @@ interface ModalInfoProps {
   title?: string
   singleButton?: boolean
   children?: ReactNode
+  small?: boolean
 }
 
 interface ModalStateProps extends ModalInfoProps {

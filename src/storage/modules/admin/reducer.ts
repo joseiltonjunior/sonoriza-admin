@@ -1,22 +1,20 @@
+import { AdminProps } from '@/types/adminsProps'
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
-export interface AdminProps {
-  admin: {
-    uid: string
-    email: string
-  }
+export interface AdminDataProps {
+  admin: AdminProps
 }
 
-const initialState: AdminProps = {
-  admin: { email: '', uid: '' },
+const initialState: AdminDataProps = {
+  admin: { email: '', id: '', name: '', photoURL: '' },
 }
 
 const adminSlice = createSlice({
-  name: 'users',
+  name: 'admin',
   initialState,
   reducers: {
-    handleSetAdmin(state, action: PayloadAction<AdminProps>) {
+    handleSetAdmin(state, action: PayloadAction<AdminDataProps>) {
       state.admin = action.payload.admin
     },
   },
