@@ -129,7 +129,7 @@ export function Musics({
         </>
       )}
 
-      {folderItems && (
+      {folderItems.length > 0 && (
         <div
           onDragOver={(e) => e.preventDefault()}
           onDragEnter={() => setIsDrop(true)}
