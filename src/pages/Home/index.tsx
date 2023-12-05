@@ -1,5 +1,5 @@
+import AWS from 'aws-sdk'
 import { Layout } from '@/components/Layout'
-
 import { useToast } from '@/hooks/useToast'
 
 import { useEffect, useMemo, useState } from 'react'
@@ -45,6 +45,10 @@ export function Home() {
   const { showToast } = useToast()
   const { openModal } = useModal()
   const { getArtists, getGenres, getMusics, getUsers } = useFirebaseServices()
+
+  const [bucketMetrics, setBucketMetrics] = useState<
+    AWS.CloudWatch.GetMetricStatisticsOutput[]
+  >([])
 
   const { artists } = useSelector<ReduxProps, ArtistsProps>(
     (state) => state.artists,
@@ -122,6 +126,77 @@ export function Home() {
     }
   }
 
+  const handleFetchUnitObjectsMetric = async () => {
+    const cloudwatch = new AWS.CloudWatch()
+
+    const params = {
+      MetricName: 'NumberOfObjects',
+      Namespace: 'AWS/S3',
+      Dimensions: [
+        {
+          Name: 'BucketName',
+          Value: 'sonoriza-media',
+        },
+        {
+          Name: 'StorageType',
+          Value: 'AllStorageTypes',
+        },
+      ],
+      StartTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7),
+      EndTime: new Date(),
+      Period: 3600,
+      Statistics: ['Average'],
+    }
+
+    const data = await cloudwatch.getMetricStatistics(params).promise()
+    return data
+  }
+
+  const handleFetchTotalSizeMetric = async () => {
+    const cloudwatch = new AWS.CloudWatch()
+
+    const params = {
+      MetricName: 'BucketSizeBytes',
+      Namespace: 'AWS/S3',
+      Dimensions: [
+        {
+          Name: 'BucketName',
+          Value: 'sonoriza-media',
+        },
+        {
+          Name: 'StorageType',
+          Value: 'StandardStorage',
+        },
+      ],
+      StartTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7),
+      EndTime: new Date(),
+      Period: 3600,
+      Statistics: ['Average'],
+    }
+
+    const data = await cloudwatch.getMetricStatistics(params).promise()
+    return data
+  }
+
+  const handleFetchMetricsAWS = async () => {
+    try {
+      const responseSize = await handleFetchTotalSizeMetric()
+
+      const responseUnit = await handleFetchUnitObjectsMetric()
+
+      setBucketMetrics([responseSize, responseUnit])
+    } catch (error) {
+      showToast('Error fetching metric', {
+        type: 'error',
+        theme: 'colored',
+      })
+    }
+  }
+
+  useEffect(() => {
+    handleFetchMetricsAWS()
+  }, [])
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
@@ -184,7 +259,7 @@ export function Home() {
 
         {tag === 'signUrl' && <SignCloudFrontUrl />}
 
-        {tag === 'graphics' && <Graphics />}
+        {tag === 'graphics' && <Graphics metricsS3={bucketMetrics} />}
 
         {tag === 'upload' && <Upload />}
 

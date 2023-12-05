@@ -1,18 +1,18 @@
 import { Button } from '@/components/Button'
-
+import { extractColors } from 'extract-colors'
 import { Input } from '@/components/form/Input'
 import { useForm } from 'react-hook-form'
 
 import { MusicEditDataProps, MusicResponseProps } from '@/types/musicProps'
 
-import { useEffect, useMemo, useState } from 'react'
+import { DragEvent, useEffect, useMemo, useState } from 'react'
 import { Select } from '../form/Select'
 import {
   ArtistsResponseProps,
   ArtistsEditDataProps,
 } from '@/types/artistsProps'
 import { useToast } from '@/hooks/useToast'
-import { IoClose } from 'react-icons/io5'
+import { IoClose, IoImage, IoMusicalNote, IoTrash } from 'react-icons/io5'
 import { addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { firestore } from '@/services/firebase'
 import { useModal } from '@/hooks/useModal'
@@ -29,9 +29,19 @@ import {
 } from '@/hooks/useFirebaseServices'
 import { handleTrackListRemote } from '@/storage/modules/trackListRemote/reducer'
 import { FormArtist } from '../FormArtist'
+import colors from 'tailwindcss/colors'
+import { FileWithType, useUpload } from '@/hooks/useUpload'
+
+import AWS from 'aws-sdk'
 
 interface FormMusicProps {
   music?: MusicResponseProps
+}
+
+interface UploadObjectProps {
+  files: FileWithType[]
+
+  artist: string
 }
 
 export function FormMusic({ music }: FormMusicProps) {
@@ -41,12 +51,22 @@ export function FormMusic({ music }: FormMusicProps) {
 
   const [isLoading, setIsLoading] = useState(false)
 
+  const [isDropArtwork, setIsDropArtwork] = useState(false)
+  const [isDropMusic, setIsDropMusic] = useState(false)
+  const [fileArtwork, setFileArtwork] = useState<FileWithType>()
+  const [fileMusic, setFileMusic] = useState<FileWithType>()
+
+  const [paletColorsArtwork, setPaletColorsArtwork] = useState<string[]>([])
+  const [selectColor, setSelectColor] = useState('')
+
   const { register, setValue, handleSubmit } = useForm<MusicEditDataProps>()
   const { getMusics, getArtists, addMusicInArtists, removeMusicFromArtists } =
     useFirebaseServices()
   const { showToast } = useToast()
   const dispatch = useDispatch()
   const { closeModal, openModal } = useModal()
+
+  const { formatBytes, formatDate, signedUrl, copyObjectUrl } = useUpload()
 
   const { artists } = useSelector<ReduxProps, ArtistsProps>(
     (state) => state.artists,
@@ -57,8 +77,6 @@ export function FormMusic({ music }: FormMusicProps) {
   )
 
   const handleUpdateMusic = async (data: MusicEditDataProps) => {
-    setIsLoading(true)
-
     if (data.id) {
       const musicsDocRef = doc(firestore, musicsCollection, data.id)
 
@@ -99,8 +117,6 @@ export function FormMusic({ music }: FormMusicProps) {
   }
 
   const handleSaveMusic = async (data: MusicEditDataProps) => {
-    setIsLoading(true)
-
     try {
       const { id } = await addDoc(collection(firestore, musicsCollection), {
         ...data,
@@ -134,11 +150,47 @@ export function FormMusic({ music }: FormMusicProps) {
     }
   }
 
-  function submit(data: MusicEditDataProps) {
+  const uploadObject = async ({ files, artist }: UploadObjectProps) => {
+    const s3 = new AWS.S3()
+    const bucketName = 'sonoriza-media'
+
+    const uploadPromises = files.map(async (file) => {
+      const params = {
+        Bucket: bucketName,
+        Key: `musics/${artist}/${file.name}`,
+        Body: file,
+        ContentType: file.type,
+      }
+
+      return await s3.upload(params).promise()
+    })
+
+    return await Promise.all(uploadPromises)
+  }
+
+  async function submit(data: MusicEditDataProps) {
     if (selectedArtists.length < 1) {
       showToast('Select at least one artist', {
         type: 'error',
-        theme: 'colored',
+        theme: 'light',
+      })
+
+      return
+    }
+
+    if (!fileArtwork && !music?.artwork) {
+      showToast('Drop a music artwork', {
+        type: 'error',
+        theme: 'light',
+      })
+
+      return
+    }
+
+    if (!fileMusic && !music?.url) {
+      showToast('Drop a music', {
+        type: 'error',
+        theme: 'light',
       })
 
       return
@@ -147,22 +199,65 @@ export function FormMusic({ music }: FormMusicProps) {
     if (!data.genre) {
       showToast('Select at least one musical genre', {
         type: 'error',
-        theme: 'colored',
+        theme: 'light',
       })
 
       return
     }
 
+    if (!data.color) {
+      showToast('Select a color', {
+        type: 'error',
+        theme: 'light',
+      })
+
+      return
+    }
+
+    setIsLoading(true)
+
+    const urlsSigned: string[] = []
+
+    if (fileArtwork || fileMusic) {
+      const filesToUpload = fileArtwork ? [fileArtwork] : []
+      if (fileMusic) filesToUpload.push(fileMusic)
+
+      const response = await uploadObject({
+        files: filesToUpload,
+        artist: selectedArtists[0].name.toLowerCase().replace(/ /g, '-'),
+      })
+
+      await Promise.all(
+        response.map(async (item) => {
+          const { responseObject } = await signedUrl(
+            `${import.meta.env.VITE_CLOUD_FRONT_DOMAIN}${item.Key}`,
+          )
+
+          urlsSigned.push(responseObject.signedUrl)
+        }),
+      )
+    }
+
+    const musicUrl = urlsSigned.find((item) => item.includes('.mp3'))
+    const artworkUrl = urlsSigned.find(
+      (item) =>
+        item.includes('.png') ||
+        item.includes('.jpg') ||
+        item.includes('.jpeg'),
+    )
+
     const newMusic = {
       ...data,
       artists: selectedArtists,
+      url: musicUrl ?? String(music?.url),
+      artwork: artworkUrl ?? String(music?.artwork),
     }
 
     if (data.id) {
       handleUpdateMusic(newMusic)
-      return
+    } else {
+      handleSaveMusic(newMusic)
     }
-    handleSaveMusic(newMusic)
   }
 
   const musicalGenresOtions = useMemo(() => {
@@ -210,11 +305,57 @@ export function FormMusic({ music }: FormMusicProps) {
     music: MusicEditDataProps,
     artistRemoveId: string,
   ) => {
-    await removeMusicFromArtists(music)
-    const responseArtists = await getArtists()
-    dispatch(handleSetArtists({ artists: responseArtists }))
+    if (music && music.artists.find((item) => item.id === artistRemoveId)) {
+      await removeMusicFromArtists(music)
+      const responseArtists = await getArtists()
+      dispatch(handleSetArtists({ artists: responseArtists }))
+    }
+
     const filter = selectedArtists.filter((item) => item.id !== artistRemoveId)
     setSelectedArtists(filter)
+  }
+
+  function dropObject(e: DragEvent<HTMLDivElement>, type: 'music' | 'artwork') {
+    e.preventDefault()
+
+    const file = e.dataTransfer.files[0]
+
+    const imageTypes = ['image/jpg', 'image/jpeg', 'image/png']
+
+    if (type === 'artwork' && imageTypes.includes(file.type)) {
+      setFileArtwork(file)
+      setIsDropArtwork(false)
+
+      return
+    }
+
+    if (type === 'music' && file.type === 'audio/mpeg') {
+      setFileMusic(file)
+      setIsDropMusic(false)
+
+      return
+    }
+
+    showToast('Archive type no suported', {
+      type: 'error',
+      theme: 'light',
+    })
+    setIsDropMusic(false)
+    setIsDropArtwork(false)
+  }
+
+  const handleExtractColor = async (file: File) => {
+    try {
+      await extractColors(URL.createObjectURL(file)).then((result) => {
+        const colors = result.map((palet) => palet.hex)
+        setPaletColorsArtwork(colors)
+      })
+    } catch (error) {
+      showToast('Erro fetch colors', {
+        type: 'error',
+        theme: 'light',
+      })
+    }
   }
 
   useEffect(() => {
@@ -232,6 +373,13 @@ export function FormMusic({ music }: FormMusicProps) {
     }
   }, [music, setValue])
 
+  useEffect(() => {
+    if (fileArtwork) {
+      handleExtractColor(fileArtwork)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileArtwork])
+
   return (
     <>
       <h1 className="font-bold text-xl text-purple-600">
@@ -239,48 +387,199 @@ export function FormMusic({ music }: FormMusicProps) {
       </h1>
       <div className="h-[1px] bg-gray-300/50 my-7" />
 
-      {selectedArtists.length > 0 && (
-        <div className="mb-4">
-          <p className="font-semibold mb-2">Artists</p>
-          <div className="flex gap-2">
-            {selectedArtists.map((artist) => (
-              <div key={artist.id} className="flex">
+      <div className="grid grid-cols-[1fr,120px]">
+        {selectedArtists.length > 0 && (
+          <div className="mb-4">
+            <p className="font-semibold mb-2">Artists</p>
+            <div className="flex gap-2">
+              {selectedArtists.map((artist) => (
+                <div key={artist.id} className="flex">
+                  <button
+                    className="flex flex-col items-center justify-center overflow-hidden"
+                    onClick={() => {
+                      openModal({
+                        children: (
+                          <FormArtist
+                            artist={artists.find(
+                              (item) => item.id === artist.id,
+                            )}
+                          />
+                        ),
+                      })
+                    }}
+                  >
+                    <img
+                      src={artist.photoURL}
+                      alt="photo artists"
+                      title={artist.name}
+                      className="object-cover w-28 h-28 rounded-xl"
+                    />
+                    <p className="text-center text-sm font-medium">
+                      {artist.name}
+                    </p>
+                  </button>
+                  <button
+                    className="w-6 h-6 rounded-full bg-purple-700 items-center justify-center flex -ml-4 -mt-3 hover:bg-purple-500"
+                    title="Remove"
+                    onClick={() =>
+                      handleRemoveArtists(
+                        music as MusicEditDataProps,
+                        artist.id,
+                      )
+                    }
+                  >
+                    <IoClose color={'#fff'} size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {music?.artwork && (
+          <div>
+            <p className="font-semibold mb-2">Artwork</p>
+            <div>
+              <img
+                src={music.artwork}
+                alt="artwork"
+                className="object-cover w-28 h-28 rounded-xl"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between gap-4 max-w-3xl">
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDragEnter={() => setIsDropArtwork(true)}
+          className="border-dashed border border-purple-600 flex items-center justify-center rounded-xl h-[100px] flex-1 relative overflow-hidden"
+        >
+          {fileArtwork?.name ? (
+            <div className="flex px-6 w-full">
+              <img
+                src={URL.createObjectURL(fileArtwork)}
+                alt={fileArtwork.name}
+                className="w-12 h-12 mr-2 rounded-full"
+              />
+
+              <div className="ml-2">
+                <p className="font-medium text-sm">{fileArtwork.name}</p>
+                <span className="text-[#71839B] text-xs font-normal">
+                  {formatBytes(fileArtwork.size)} -{' '}
+                  {formatDate(fileArtwork.lastModified)}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFileArtwork(undefined)
+                }}
+                className="ml-auto"
+              >
+                <IoTrash color={colors.red[600]} size={20} />
+              </button>
+            </div>
+          ) : (
+            <>
+              {music?.artwork ? (
                 <button
-                  className="flex flex-col items-center justify-center overflow-hidden"
-                  onClick={() => {
-                    openModal({
-                      children: (
-                        <FormArtist
-                          artist={artists.find((item) => item.id === artist.id)}
-                        />
-                      ),
-                    })
-                  }}
+                  title="Copy a link"
+                  className="grid grid-cols-[20px,auto] gap-2 px-4 items-center justify-center overflow-hidden"
+                  onClick={() => copyObjectUrl(music.artwork)}
                 >
-                  <img
-                    src={artist.photoURL}
-                    alt="photo artists"
-                    title={artist.name}
-                    className="object-cover w-28 h-28 rounded-xl"
-                  />
-                  <p className="text-center text-sm font-medium">
-                    {artist.name}
+                  <IoImage color={colors.purple[600]} size={20} />
+                  <p className="font-semibold text-purple-600 line-clamp-1">
+                    {music.artwork}
                   </p>
                 </button>
-                <button
-                  className="w-6 h-6 rounded-full bg-purple-700 items-center justify-center flex -ml-4 -mt-3 hover:bg-purple-500"
-                  title="Remove"
-                  onClick={() =>
-                    handleRemoveArtists(music as MusicEditDataProps, artist.id)
-                  }
-                >
-                  <IoClose color={'#fff'} size={14} />
-                </button>
+              ) : (
+                <div className="flex gap-2 items-center justify-center">
+                  <IoImage color={colors.purple[600]} size={20} />
+                  <p className="font-semibold text-purple-600">
+                    Drop a Artwork
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+          {isDropArtwork && (
+            <div
+              onDrop={(e) => dropObject(e, 'artwork')}
+              onDragLeave={() => setIsDropArtwork(false)}
+              className="bg-black/80 w-full h-full absolute top-0 flex items-center justify-center "
+            >
+              <div className="pointer-events-none">
+                <p className="text-white font-bold text-xl">Drop your file</p>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
-      )}
+
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDragEnter={() => setIsDropMusic(true)}
+          className="border-dashed border border-purple-600 h-[100px] rounded-xl flex-1 relative overflow-hidden flex items-center justify-center"
+        >
+          {isDropMusic && (
+            <div
+              onDrop={(e) => dropObject(e, 'music')}
+              onDragLeave={() => setIsDropMusic(false)}
+              className="bg-black/80 w-full h-full absolute top-0 flex items-center justify-center "
+            >
+              <div className="pointer-events-none">
+                <p className="text-white font-bold text-xl">Drop your file</p>
+              </div>
+            </div>
+          )}
+
+          {fileMusic ? (
+            <div className="flex px-6 w-full">
+              <IoMusicalNote size={48} />
+
+              <div className="ml-2">
+                <p className="font-medium text-sm">{fileMusic.name}</p>
+                <span className="text-[#71839B] text-xs font-normal">
+                  {formatBytes(fileMusic.size)} -{' '}
+                  {formatDate(fileMusic.lastModified)}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFileMusic(undefined)
+                }}
+                className="ml-auto"
+              >
+                <IoTrash color={colors.red[600]} size={20} />
+              </button>
+            </div>
+          ) : (
+            <>
+              {music ? (
+                <button
+                  title="Copy a link"
+                  className="grid grid-cols-[20px,auto] gap-1 px-4 items-center justify-center overflow-hidden"
+                  onClick={() => copyObjectUrl(music.url)}
+                >
+                  <IoMusicalNote color={colors.purple[600]} size={20} />
+                  <p className="font-semibold text-purple-600 line-clamp-1">
+                    {music.url}
+                  </p>
+                </button>
+              ) : (
+                <div className="flex gap-2 items-center justify-center">
+                  <IoMusicalNote color={colors.purple[600]} size={20} />
+                  <p className="font-semibold text-purple-600">Drop a Music</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit(submit)} className="flex flex-col">
         <div>
@@ -308,24 +607,8 @@ export function FormMusic({ music }: FormMusicProps) {
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              placeholder="www.sonoriza.com"
-              label="Artwork URL"
-              name="artwork"
-              register={register}
-              required
-            />
-            <Input
-              placeholder="www.sonoriza.com"
-              label="Music URL"
-              name="url"
-              register={register}
-              required
-            />
-          </div>
 
-          <div className="grid grid-cols-[250px,120px] gap-4">
+          <div className="grid grid-cols-[250px,auto] gap-4 items-end">
             <Select
               options={musicalGenresOtions}
               label="Musical Genrer"
@@ -333,13 +616,42 @@ export function FormMusic({ music }: FormMusicProps) {
               register={register}
               required
             />
-            <Input
-              placeholder="#ffffff"
-              label="Color"
-              name="color"
-              register={register}
-              required
-            />
+            <div>
+              <p className="font-bold text-sm my-3">
+                {paletColorsArtwork.length > 0
+                  ? 'Select a color'
+                  : music?.color && 'Color'}
+              </p>
+              <div className="flex gap-2 items-center">
+                {paletColorsArtwork.length > 0 ? (
+                  paletColorsArtwork.map((color) => (
+                    <button
+                      type="button"
+                      style={{ background: color }}
+                      key={color}
+                      className={`w-8 h-8 rounded-full ${
+                        selectColor === color && 'border-2 border-black'
+                      }`}
+                      title={color}
+                      onClick={() => {
+                        setValue('color', color)
+                        setSelectColor(color)
+                      }}
+                    />
+                  ))
+                ) : (
+                  <>
+                    {music?.color && (
+                      <div
+                        style={{ background: music.color }}
+                        className="w-8 h-8 rounded-full "
+                        title={music?.color}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         <div className="h-[1px] bg-gray-300/50 my-7" />
