@@ -40,6 +40,7 @@ import { MusicalGenres } from '@/components/MusicalGenres'
 import { SignCloudFrontUrl } from '@/components/SignCloudFrontUrl'
 import { Graphics } from '@/components/Graphics'
 import { Upload } from '@/components/Upload'
+import { FormMusicalGenres } from '@/components/FormMusicalGenres'
 
 export function Home() {
   const { showToast } = useToast()
@@ -195,6 +196,7 @@ export function Home() {
 
   useEffect(() => {
     handleFetchMetricsAWS()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -237,6 +239,12 @@ export function Home() {
                     case 'artists':
                       openModal({
                         children: <FormArtist />,
+                      })
+                      break
+
+                    case 'genres':
+                      openModal({
+                        children: <FormMusicalGenres />,
                       })
                       break
 
