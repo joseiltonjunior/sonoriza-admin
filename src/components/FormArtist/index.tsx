@@ -168,8 +168,11 @@ export function FormArtist({ artist }: FormArtistProps) {
 
   const handleSelectMusicalGenre = (genre: string) => {
     const isExists = musicalGenresSelected.find((item) => item.name === genre)
-    if (isExists) return
-    setMusicalGenresSelected((prev) => [...prev, { name: genre }])
+    const musicalGenreSelected = musicalGenres.find(
+      (item) => item.name === genre,
+    )
+    if (isExists || !musicalGenreSelected) return
+    setMusicalGenresSelected((prev) => [...prev, musicalGenreSelected])
   }
 
   function dropObject(e: DragEvent<HTMLDivElement>) {
