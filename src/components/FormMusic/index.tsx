@@ -224,7 +224,11 @@ export function FormMusic({ music }: FormMusicProps) {
 
       const response = await uploadObject({
         files: filesToUpload,
-        artist: selectedArtists[0].name.toLowerCase().replace(/ /g, '-'),
+        artist: selectedArtists[0].name
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-zA-Z0-9]/g, '-')
+          .toLowerCase(),
       })
 
       await Promise.all(
