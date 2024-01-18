@@ -63,6 +63,21 @@ export function Users() {
     [dispatch, getUsers, showToast],
   )
 
+  const handleCopyClick = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url)
+      showToast('Text copied to clipboard', {
+        type: 'success',
+        theme: 'light',
+      })
+    } catch (err) {
+      showToast('Error copying to clipboard', {
+        type: 'warning',
+        theme: 'light',
+      })
+    }
+  }
+
   return (
     <>
       {users.map((user) => (
@@ -88,6 +103,7 @@ export function Users() {
               <p className="font-bold text-purple-600 text-lg">
                 {user.displayName}
               </p>
+
               <p>{user.email}</p>
 
               <div className="flex gap-2">
@@ -128,6 +144,15 @@ export function Users() {
             onChange={(e) => handleSetUserPlan(user.uid, e.currentTarget.value)}
             value={user.plan ?? 'free'}
           />
+
+          {user.tokenFcm && (
+            <button
+              title="copy token"
+              onClick={() => handleCopyClick(user.tokenFcm)}
+            >
+              <strong>Token FCM</strong>
+            </button>
+          )}
         </div>
       ))}
     </>

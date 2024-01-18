@@ -116,6 +116,16 @@ export function Aside({ isError }: AsideProps) {
                 </button>
               </div>
             )}
+
+            {/* <button
+              className={`text-white font-bold text-lg flex items-center justify-between hover:bg-purple-600 p-2 px-4 rounded-xl transition delay-75 ${
+                tag === 'notifications' && `bg-purple-600 text-white`
+              } mt-8 transition delay-75`}
+              onClick={() => dispatch(handleSetTag({ tag: 'notifications' }))}
+            >
+              Notifications
+              <IoNotifications />
+            </button> */}
           </div>
         </>
       )}

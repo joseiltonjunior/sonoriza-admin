@@ -13,4 +13,5 @@ export interface UserDataProps {
   plan: string | null
   favoritesArtists?: string[]
   favoritesMusics?: string[]
+  tokenFcm: string
 }
