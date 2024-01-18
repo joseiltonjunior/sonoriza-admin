@@ -3,12 +3,7 @@ import { ReduxProps } from '@/storage'
 
 import { AdminDataProps } from '@/storage/modules/admin/reducer'
 import { useState } from 'react'
-import {
-  IoAnalytics,
-  IoLogoAmazon,
-  IoLogoFirebase,
-  IoNotifications,
-} from 'react-icons/io5'
+import { IoAnalytics, IoLogoAmazon, IoLogoFirebase } from 'react-icons/io5'
 import { SideMenuProps, handleSetTag } from '@/storage/modules/sideMenu/reducer'
 
 interface AsideProps {

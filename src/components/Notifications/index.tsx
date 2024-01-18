@@ -22,7 +22,7 @@ interface NotificationsProps {
 export function Notifications() {
   const { register, handleSubmit } = useForm<NotificationsProps>()
 
-  const [isLoading, setIsLoading] = useState(false)
+  // const [isLoading, setIsLoading] = useState(false)
   const [isDrop, setIsDrop] = useState(false)
   const [file, setFile] = useState<FileWithType>()
 
@@ -170,7 +170,7 @@ export function Notifications() {
             )}
           </div>
         </div>
-        <Button title={'Send'} variant="purple" isLoading={isLoading} />
+        <Button title={'Send'} variant="purple" />
       </form>
     </div>
   )
