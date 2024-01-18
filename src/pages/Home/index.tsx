@@ -41,6 +41,7 @@ import { SignCloudFrontUrl } from '@/components/SignCloudFrontUrl'
 import { Graphics } from '@/components/Graphics'
 import { Upload } from '@/components/Upload'
 import { FormMusicalGenres } from '@/components/FormMusicalGenres'
+import { Notifications } from '@/components/Notifications'
 
 export function Home() {
   const { showToast } = useToast()
@@ -73,7 +74,13 @@ export function Home() {
     (state) => state.sideMenu,
   )
 
-  const excludePath = ['users', 'graphics', 'signUrl', 'upload']
+  const excludePath = [
+    'users',
+    'graphics',
+    'signUrl',
+    'upload',
+    'notifications',
+  ]
 
   const handleFormatTitle = useMemo(() => {
     switch (tag) {
@@ -97,6 +104,9 @@ export function Home() {
 
       case 'upload':
         return 'Bucket S3'
+
+      case 'notifications':
+        return 'Notifications'
 
       default:
         return ''
@@ -270,6 +280,8 @@ export function Home() {
         {tag === 'graphics' && <Graphics metricsS3={bucketMetrics} />}
 
         {tag === 'upload' && <Upload />}
+
+        {tag === 'notifications' && <Notifications />}
 
         {isLoading && (
           <>

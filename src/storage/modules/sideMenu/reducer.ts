@@ -10,6 +10,7 @@ export interface SideMenuProps {
     | 'signUrl'
     | 'graphics'
     | 'upload'
+    | 'notifications'
 }
 
 const initialState: SideMenuProps = {

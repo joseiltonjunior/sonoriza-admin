@@ -38,7 +38,7 @@ interface FormArtistProps {
   artist?: ArtistsResponseProps
 }
 
-interface UploadObjectProps {
+export interface UploadObjectProps {
   file: FileWithType
 }
 
