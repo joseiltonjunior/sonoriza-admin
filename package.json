@@ -22,7 +22,7 @@
     "@vercel/analytics": "^1.0.1",
     "apexcharts": "^3.44.0",
     "aws-sdk": "^2.1498.0",
-    "axios": "^1.6.2",
+    "axios": "^1.13.6",
     "extract-colors": "^4.0.2",
     "firebase": "^10.1.0",
     "i18next": "^23.3.0",

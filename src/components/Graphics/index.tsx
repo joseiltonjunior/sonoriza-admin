@@ -81,8 +81,6 @@ export function Graphics({ metricsS3 }: GraphicsProps) {
     return { categories: allGenres, values }
   }, [artists])
 
-  console.log(graphicArtistsByGenre)
-
   const totalItems = graphicTotalData.values.reduce(
     (acc, value) => acc + value,
     0,
