@@ -5,15 +5,13 @@ import { useForm } from 'react-hook-form'
 import { signInSchema } from './tokenSchema'
 import { Layout } from '@/components/Layout'
 
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import { useToast } from '@/hooks/useToast'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { handleSetAdmin } from '@/storage/modules/admin/reducer'
-import { collection, doc, getDoc } from 'firebase/firestore'
-import { firestore } from '@/services/firebase'
-import { AdminProps } from '@/types/adminsProps'
+
+import { api } from '@/services/api'
 
 interface SignInProps {
   email: string
@@ -36,48 +34,49 @@ export function SignIn() {
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const auth = getAuth()
+  async function handleAuthenticateUser(data: SignInProps) {
+    setIsLoading(true)
+    await api
+      .post('/sessions', {
+        email: data.email,
+        password: data.password,
+      })
+      .then((response) => {
+        const { access_token: token, user } = response.data
 
-  async function handleFetchDataUser(uid: string) {
-    const docRef = doc(collection(firestore, 'admins'), uid)
-
-    getDoc(docRef)
-      .then((docSnapshot) => {
-        if (docSnapshot.exists()) {
-          const adminResponse = docSnapshot.data() as AdminProps
-          dispatch(handleSetAdmin({ admin: adminResponse }))
-          navigate(`/home`, { replace: true })
-          showToast(`Welcome Back ${adminResponse.name?.split(' ')[0]}.`, {
-            type: 'info',
-            theme: 'light',
-          })
-        } else {
-          showToast('Access denied', {
+        if (user.role !== 'ADMIN') {
+          setIsLoading(false)
+          showToast(`Unauthorized Access`, {
             type: 'error',
             theme: 'light',
           })
+          return
         }
-      })
-      .catch(() => {
-        showToast('Access denied', {
-          type: 'error',
+
+        dispatch(
+          handleSetAdmin({
+            admin: {
+              email: user.email,
+              name: user.name,
+              photoURL: user.photoURL,
+              id: user.id,
+            },
+          }),
+        )
+        navigate(`/home`, { replace: true })
+        showToast(`Welcome Back ${user.name?.split(' ')[0]}.`, {
+          type: 'info',
           theme: 'light',
         })
-      })
-  }
 
-  function submit(data: SignInProps) {
-    setIsLoading(true)
-    signInWithEmailAndPassword(auth, data.email, data.password)
-      .then(async (result) => {
-        const { uid } = result.user
-        handleFetchDataUser(uid)
+        localStorage.setItem('@sonoriza:token', token)
       })
-      .catch(() => {
-        setError('email', { message: '* invalid credentials' })
-        setError('password', { message: '* invalid credentials' })
+      .catch((err) => {
+        const errResponse = err.response.data
+        setError('email', { message: `* ${errResponse.message}` })
+        setError('password', { message: `* ${errResponse.message}` })
 
-        showToast('Invalid credentials', {
+        showToast(`${errResponse.message}`, {
           type: 'error',
           theme: 'light',
         })
@@ -95,7 +94,7 @@ export function SignIn() {
         </h3>
         <div className="bg-white rounded-2xl p-7 mt-8 top-5">
           <form
-            onSubmit={handleSubmit(submit)}
+            onSubmit={handleSubmit(handleAuthenticateUser)}
             className="max-w-[598px] md:max-w-full flex flex-col items-end"
           >
             <div className="grid grid-cols-[1fr,1fr]  gap-4 w-full md:grid-cols-1">

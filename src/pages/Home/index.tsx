@@ -5,7 +5,6 @@ import { useToast } from '@/hooks/useToast'
 import { useEffect, useMemo, useState } from 'react'
 
 import Skeleton from 'react-loading-skeleton'
-import { useNavigate } from 'react-router-dom'
 
 import { useDispatch, useSelector } from 'react-redux'
 import { ReduxProps } from '@/storage'
@@ -18,7 +17,6 @@ import { Users } from '@/components/Users'
 import { Artists } from '@/components/Artists'
 
 import { Musics } from '@/components/Musics'
-import { getAuth } from 'firebase/auth'
 
 import { useModal } from '@/hooks/useModal'
 import {
@@ -33,8 +31,8 @@ import {
   MusicalGenresProps,
   handleSetMusicalGenres,
 } from '@/storage/modules/musicalGenres/reducer'
-import { useFirebaseServices } from '@/hooks/useFirebaseServices'
-import { UsersProps, handleSetUsers } from '@/storage/modules/users/reducer'
+
+import { UsersProps } from '@/storage/modules/users/reducer'
 import { FormArtist } from '@/components/FormArtist'
 import { MusicalGenres } from '@/components/MusicalGenres'
 import { SignCloudFrontUrl } from '@/components/SignCloudFrontUrl'
@@ -42,11 +40,14 @@ import { Graphics } from '@/components/Graphics'
 import { Upload } from '@/components/Upload'
 import { FormMusicalGenres } from '@/components/FormMusicalGenres'
 import { Notifications } from '@/components/Notifications'
+import { api } from '@/services/api'
+import { MusicalGenresDataProps } from '@/types/musicalGenresProps'
+import { MusicResponseProps } from '@/types/musicProps'
+import { ArtistsResponseProps } from '@/types/artistsProps'
 
 export function Home() {
   const { showToast } = useToast()
   const { openModal } = useModal()
-  const { getArtists, getGenres, getMusics, getUsers } = useFirebaseServices()
 
   const [bucketMetrics, setBucketMetrics] = useState<
     AWS.CloudWatch.GetMetricStatisticsOutput[]
@@ -66,8 +67,6 @@ export function Home() {
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const navigate = useNavigate()
-  const auth = getAuth()
   const dispatch = useDispatch()
 
   const { tag } = useSelector<ReduxProps, SideMenuProps>(
@@ -112,30 +111,6 @@ export function Home() {
         return ''
     }
   }, [tag])
-
-  const handleFetchData = async () => {
-    try {
-      setIsLoading(true)
-
-      const musicsResponse = await getMusics()
-      const artistsResponse = await getArtists()
-      const musicalGenresResponse = await getGenres()
-      const usersResponse = await getUsers()
-
-      dispatch(handleSetArtists({ artists: artistsResponse }))
-      dispatch(handleTrackListRemote({ trackListRemote: musicsResponse }))
-      dispatch(handleSetMusicalGenres({ musicalGenres: musicalGenresResponse }))
-      dispatch(handleSetUsers({ users: usersResponse }))
-
-      setIsLoading(false)
-    } catch (error) {
-      setIsLoading(false)
-      showToast('Error fetching data', {
-        type: 'error',
-        theme: 'colored',
-      })
-    }
-  }
 
   const handleFetchUnitObjectsMetric = async () => {
     const cloudwatch = new AWS.CloudWatch()
@@ -189,38 +164,66 @@ export function Home() {
     return data
   }
 
-  const handleFetchMetricsAWS = async () => {
-    try {
-      const responseSize = await handleFetchTotalSizeMetric()
-
-      const responseUnit = await handleFetchUnitObjectsMetric()
-
-      setBucketMetrics([responseSize, responseUnit])
-    } catch (error) {
-      showToast('Error fetching metric', {
-        type: 'error',
-        theme: 'colored',
-      })
-    }
-  }
-
   useEffect(() => {
-    handleFetchMetricsAWS()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    async function handleFetchMetricsAWS() {
+      try {
+        const responseSize = await handleFetchTotalSizeMetric()
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        handleFetchData()
-      } else {
-        navigate('/')
+        const responseUnit = await handleFetchUnitObjectsMetric()
+
+        setBucketMetrics([responseSize, responseUnit])
+      } catch (error) {
+        showToast('Error fetching metric', {
+          type: 'error',
+          theme: 'colored',
+        })
       }
-    })
+    }
 
-    return () => unsubscribe()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    handleFetchMetricsAWS()
   }, [])
+
+  useEffect(() => {
+    async function loadInitialData() {
+      try {
+        setIsLoading(true)
+        const [musicsResponse, artistsResponse, genresResponse] =
+          await Promise.all([
+            api.get('/musics'),
+            api.get('/artists'),
+            api.get('/genres'),
+          ])
+
+        dispatch(
+          handleTrackListRemote({
+            trackListRemote: musicsResponse.data.data as MusicResponseProps[],
+          }),
+        )
+
+        dispatch(
+          handleSetArtists({
+            artists: artistsResponse.data.data as ArtistsResponseProps[],
+          }),
+        )
+
+        dispatch(
+          handleSetMusicalGenres({
+            musicalGenres: genresResponse.data.data as MusicalGenresDataProps[],
+          }),
+        )
+
+        setIsLoading(false)
+      } catch (error) {
+        setIsLoading(false)
+        showToast('Error fetching data', {
+          type: 'error',
+          theme: 'colored',
+        })
+      }
+    }
+
+    loadInitialData()
+  }, [dispatch])
 
   return (
     <Layout>
