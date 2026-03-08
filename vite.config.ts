@@ -13,7 +13,7 @@ export default defineConfig({
     port: 3000,
   },
   define: {
-    global: {},
+    global: 'globalThis',
   },
   build: {
     sourcemap: true,
@@ -32,3 +32,4 @@ export default defineConfig({
     },
   },
 })
+
