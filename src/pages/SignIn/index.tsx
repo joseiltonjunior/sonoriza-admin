@@ -11,7 +11,7 @@ import { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { handleSetAdmin } from '@/storage/modules/admin/reducer'
 
-import { api } from '@/services/api'
+import { api, TOKEN_KEY } from '@/services/api'
 
 interface SignInProps {
   email: string
@@ -35,6 +35,7 @@ export function SignIn() {
   const [isLoading, setIsLoading] = useState(false)
 
   async function handleAuthenticateUser(data: SignInProps) {
+    localStorage.removeItem(TOKEN_KEY)
     setIsLoading(true)
     await api
       .post('/sessions', {
