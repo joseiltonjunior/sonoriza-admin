@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const TOKEN_KEY = '@sonoriza:token'
+export const TOKEN_KEY = '@sonoriza:token'
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
