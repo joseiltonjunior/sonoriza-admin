@@ -32,7 +32,7 @@ import {
   handleSetMusicalGenres,
 } from '@/storage/modules/musicalGenres/reducer'
 
-import { UsersProps } from '@/storage/modules/users/reducer'
+import { handleSetUsers, UsersProps } from '@/storage/modules/users/reducer'
 import { FormArtist } from '@/components/FormArtist'
 import { MusicalGenres } from '@/components/MusicalGenres'
 import { SignCloudFrontUrl } from '@/components/SignCloudFrontUrl'
@@ -44,6 +44,7 @@ import { api } from '@/services/api'
 import { MusicalGenresDataProps } from '@/types/musicalGenresProps'
 import { MusicResponseProps } from '@/types/musicProps'
 import { ArtistsResponseProps } from '@/types/artistsProps'
+import { UserDataProps } from '@/types/userProps'
 
 export function Home() {
   const { showToast } = useToast()
@@ -181,17 +182,18 @@ export function Home() {
     }
 
     handleFetchMetricsAWS()
-  }, [])
+  }, [showToast])
 
   useEffect(() => {
     async function loadInitialData() {
       try {
         setIsLoading(true)
-        const [musicsResponse, artistsResponse, genresResponse] =
+        const [musicsResponse, artistsResponse, genresResponse, usersResponse] =
           await Promise.all([
             api.get('/musics'),
             api.get('/artists'),
             api.get('/genres'),
+            api.get('/users'),
           ])
 
         dispatch(
@@ -212,6 +214,10 @@ export function Home() {
           }),
         )
 
+        dispatch(
+          handleSetUsers({ users: usersResponse.data.data as UserDataProps[] }),
+        )
+
         setIsLoading(false)
       } catch (error) {
         setIsLoading(false)
@@ -223,7 +229,7 @@ export function Home() {
     }
 
     loadInitialData()
-  }, [dispatch])
+  }, [dispatch, showToast])
 
   return (
     <Layout>

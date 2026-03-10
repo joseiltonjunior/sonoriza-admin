@@ -3,8 +3,6 @@ import { Button } from '@/components/Button'
 import { Input } from '@/components/form/Input'
 import { useForm } from 'react-hook-form'
 
-import AWS from 'aws-sdk'
-
 import { DragEvent, useEffect, useMemo, useState } from 'react'
 
 import {
@@ -13,8 +11,6 @@ import {
 } from '@/types/artistsProps'
 import { useToast } from '@/hooks/useToast'
 
-import { addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore'
-import { firestore } from '@/services/firebase'
 import { useModal } from '@/hooks/useModal'
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -22,7 +18,6 @@ import { useKeenSlider } from 'keen-slider/react'
 
 import { handleSetArtists } from '@/storage/modules/artists/reducer'
 
-import { useFirebaseServices } from '@/hooks/useFirebaseServices'
 import { MusicResponseProps } from '@/types/musicProps'
 import Skeleton from 'react-loading-skeleton'
 import { FormMusic } from '../FormMusic'
@@ -33,6 +28,8 @@ import { MusicalGenresDataProps } from '@/types/musicalGenresProps'
 import { IoImage, IoTrash } from 'react-icons/io5'
 import colors from 'tailwindcss/colors'
 import { FileWithType, useUpload } from '@/hooks/useUpload'
+import { api } from '@/services/api'
+import { UploadObjectResponseProps } from '@/types/uploadProps'
 
 interface FormArtistProps {
   artist?: ArtistsResponseProps
@@ -53,12 +50,11 @@ export function FormArtist({ artist }: FormArtistProps) {
   const [file, setFile] = useState<FileWithType>()
 
   const { register, handleSubmit, setValue } = useForm<ArtistsEditDataProps>()
-  const { getArtists, getMusicsById, getArtistById } = useFirebaseServices()
   const { showToast } = useToast()
   const dispatch = useDispatch()
   const { closeModal, openModal } = useModal()
 
-  const { formatBytes, formatDate, signedUrl } = useUpload()
+  const { formatBytes, formatDate } = useUpload()
 
   const [sliderRef] = useKeenSlider({
     slides: {
@@ -74,7 +70,7 @@ export function FormArtist({ artist }: FormArtistProps) {
     const options = musicalGenres?.map((genre) => {
       return {
         label: genre.name,
-        value: genre.name,
+        value: genre.id,
       }
     })
 
@@ -84,63 +80,54 @@ export function FormArtist({ artist }: FormArtistProps) {
   }, [musicalGenres])
 
   const handleUpdateArtist = async (data: ArtistsEditDataProps) => {
-    const artistsCollection = 'artists'
     setIsLoading(true)
 
-    if (data.id) {
-      const artistsDocRef = doc(firestore, artistsCollection, data.id)
-      const musicsId = musics?.map((music) => music.id)
+    try {
+      await api.post('/artists', {
+        name: data.name,
+        photoURL: data.photoURL,
+        genreIds: [musicalGenresSelected[0].id],
+      })
 
-      try {
-        const artistsDoc = await getDoc(artistsDocRef)
+      showToast('Artist updated successfully', {
+        type: 'success',
+        theme: 'light',
+      })
 
-        if (artistsDoc.exists()) {
-          await updateDoc(artistsDocRef, { ...data, musics: musicsId })
+      const responseArtists = await api
+        .get('/artists')
+        .then((res) => res.data.data as ArtistsResponseProps[])
+      dispatch(handleSetArtists({ artists: responseArtists }))
 
-          showToast('Artist updated successfully', {
-            type: 'success',
-            theme: 'light',
-          })
-
-          const responseArtists = await getArtists()
-          dispatch(handleSetArtists({ artists: responseArtists }))
-        } else {
-          showToast('Artist not found', {
-            type: 'warning',
-            theme: 'light',
-          })
-        }
-        setIsLoading(false)
-        closeModal()
-      } catch (error) {
-        setIsLoading(true)
-        showToast(`Error updating artist`, {
-          type: 'error',
-          theme: 'light',
-        })
-      }
+      setIsLoading(false)
+      closeModal()
+    } catch (error) {
+      setIsLoading(true)
+      showToast(`Error updating artist`, {
+        type: 'error',
+        theme: 'light',
+      })
     }
   }
 
   const handleSaveArtist = async (data: ArtistsEditDataProps) => {
-    const artistsCollection = 'artists'
     setIsLoading(true)
 
     try {
-      const { id } = await addDoc(collection(firestore, artistsCollection), {
-        ...data,
-        musics: [],
+      await api.post('/artists', {
+        name: data.name,
+        photoURL: data.photoURL,
+        genreIds: [data.musicalGenres],
       })
-
-      const artistsDocRef = doc(firestore, artistsCollection, id)
-      await updateDoc(artistsDocRef, { id })
 
       showToast('Artist added successfully', {
         type: 'success',
         theme: 'light',
       })
 
-      const responseArtists = await getArtists()
+      const responseArtists = await api
+        .get('/artists')
+        .then((res) => res.data.data as ArtistsResponseProps[])
       dispatch(handleSetArtists({ artists: responseArtists }))
 
       setIsLoading(false)
@@ -156,20 +143,18 @@ export function FormArtist({ artist }: FormArtistProps) {
 
   const handleGetMusics = async (id: string) => {
     try {
-      const { musics } = await getArtistById(id)
+      const responseMusics = await api.get(`/musics?artistId=${id}`)
 
-      const responseMusics = await getMusicsById(musics.slice(0, 10))
-
-      setMusics(responseMusics)
+      setMusics(responseMusics.data.data as MusicResponseProps[])
     } catch (error) {
       console.log(error)
     }
   }
 
-  const handleSelectMusicalGenre = (genre: string) => {
-    const isExists = musicalGenresSelected.find((item) => item.name === genre)
+  const handleSelectMusicalGenre = (genreId: string) => {
+    const isExists = musicalGenresSelected.find((item) => item.id === genreId)
     const musicalGenreSelected = musicalGenres.find(
-      (item) => item.name === genre,
+      (item) => item.id === genreId,
     )
     if (isExists || !musicalGenreSelected) return
     setMusicalGenresSelected((prev) => [...prev, musicalGenreSelected])
@@ -196,18 +181,27 @@ export function FormArtist({ artist }: FormArtistProps) {
     setIsDrop(false)
   }
 
+  const slugify = (value: string) =>
+    value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\.[^/.]+$/, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+
   const uploadObject = async ({ file }: UploadObjectProps) => {
-    const s3 = new AWS.S3()
-    const bucketName = 'sonoriza-media'
+    const formData = new FormData()
 
-    const params = {
-      Bucket: bucketName,
-      Key: `artists/${file.name}`,
-      Body: file,
-      ContentType: file.type,
-    }
+    formData.append('files', file)
+    formData.append('folder', 'artists')
+    formData.append('slug', slugify(file.name))
 
-    return await s3.upload(params).promise()
+    const objectPathSigned = await api
+      .post('/uploads', formData)
+      .then((res) => res.data.files as UploadObjectResponseProps[])
+
+    return objectPathSigned
   }
 
   async function submit(data: ArtistsEditDataProps) {
@@ -232,14 +226,9 @@ export function FormArtist({ artist }: FormArtistProps) {
 
     const response = await uploadObject({ file })
 
-    const {
-      responseObject: { signedUrl: urlSigned },
-    } = await signedUrl(import.meta.env.VITE_CLOUD_FRONT_DOMAIN + response.Key)
-
     const formArtist = {
       ...data,
-      photoURL: urlSigned,
-      musicalGenres: musicalGenresSelected,
+      photoURL: response[0].signedUrl,
     }
 
     if (data.id) {
@@ -253,7 +242,6 @@ export function FormArtist({ artist }: FormArtistProps) {
     if (artist?.id) {
       handleGetMusics(artist.id)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artist?.id])
 
   useEffect(() => {
@@ -299,7 +287,7 @@ export function FormArtist({ artist }: FormArtistProps) {
                     className="keen-slider__slide flex flex-col items-center gap-2"
                     onClick={() => {
                       openModal({
-                        children: <FormMusic music={music} />,
+                        children: <FormMusic />,
                       })
                     }}
                   >
