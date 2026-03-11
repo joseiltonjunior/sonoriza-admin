@@ -32,7 +32,7 @@ import { api } from '@/services/api'
 import { UploadObjectResponseProps } from '@/types/uploadProps'
 
 interface FormMusicProps {
-  music?: MusicFormDataProps
+  musicId?: string
 }
 
 interface UploadObjectProps {
@@ -41,7 +41,7 @@ interface UploadObjectProps {
   artist: string
 }
 
-export function FormMusic({ music }: FormMusicProps) {
+export function FormMusic({ musicId }: FormMusicProps) {
   const [selectedArtists, setSelectedArtists] = useState<
     ArtistsEditDataProps[]
   >([])
@@ -52,6 +52,7 @@ export function FormMusic({ music }: FormMusicProps) {
   const [isDropMusic, setIsDropMusic] = useState(false)
   const [fileArtwork, setFileArtwork] = useState<FileWithType>()
   const [fileMusic, setFileMusic] = useState<FileWithType>()
+  const [music, setMusic] = useState<MusicResponseProps>()
 
   const [paletColorsArtwork, setPaletColorsArtwork] = useState<string[]>([])
   const [selectColor, setSelectColor] = useState('')
@@ -72,14 +73,14 @@ export function FormMusic({ music }: FormMusicProps) {
     (state) => state.musicalGenres,
   )
 
-  const handleUpdateMusic = async (data: MusicFormDataProps) => {
-    if (data.id) {
+  const handleUpdateMusic = async (data: MusicFormDataProps, id: string) => {
+    if (id) {
       try {
-        return console.log(data)
+        await api.patch(`/musics/${id}`, data)        
 
         const responseArtists = await api
           .get('/artists')
-          .then((res) => res.data.artists as ArtistsResponseProps[])
+          .then((res) => res.data.data as ArtistsResponseProps[])
         dispatch(handleSetArtists({ artists: responseArtists }))
 
         showToast('Music updated successfully', {
@@ -89,7 +90,7 @@ export function FormMusic({ music }: FormMusicProps) {
 
         const responseMusics = await api
           .get('/musics')
-          .then((res) => res.data.musics as MusicResponseProps[])
+          .then((res) => res.data.data as MusicResponseProps[])
         dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
 
         setIsLoading(false)
@@ -107,7 +108,7 @@ export function FormMusic({ music }: FormMusicProps) {
   const handleSaveMusic = async (data: MusicFormDataProps) => {
     try {
       await api.post('/musics', data)
-      
+
       showToast('Music added successfully', {
         type: 'success',
         theme: 'light',
@@ -233,19 +234,19 @@ export function FormMusic({ music }: FormMusicProps) {
         item.includes('.jpeg'),
     )
 
-    const newMusic = {
-      ...data,
+    const newMusic = {      
       slug: slugify(data.title),
       artistIds: selectedArtists.map((artist) => artist.id),
       url: musicUrl ?? String(music?.url),
       artwork: artworkUrl ?? String(music?.artwork),
-      genreId: data.genreId
-
-      
-    }    
+      genreId: data.genreId,
+      album: data.album,
+      color: data.color,
+      title: data.title,
+    }
 
     if (data.id) {
-      handleUpdateMusic(newMusic)
+      handleUpdateMusic(newMusic, data.id)
     } else {
       handleSaveMusic(newMusic)
     }
@@ -287,24 +288,19 @@ export function FormMusic({ music }: FormMusicProps) {
 
     setSelectedArtists([
       ...selectedArtists,
-      { id, name, photoURL, musicalGenres },
+      {
+        id,
+        name,
+        photoURL,
+        musicalGenres: musicalGenres.map((item) => item.name).join(', '),
+      },
     ])
     setValue('artistIds', [])
   }
 
-  const handleRemoveArtists = async (
-    music: string,
-    artistRemoveId: string,
-  ) => {
-    console.log(music, artistRemoveId)
-    // if (music && music.artists.find((item) => item.id === artistRemoveId)) {
-    //   await removeMusicFromArtists(music)
-    //   const responseArtists = await getArtists()
-    //   dispatch(handleSetArtists({ artists: responseArtists }))
-    // }
-
-    // const filter = selectedArtists.filter((item) => item.id !== artistRemoveId)
-    // setSelectedArtists(filter)
+  const handleRemoveArtists = async (artistRemoveId: string) => {
+    const filter = selectedArtists.filter((item) => item.id !== artistRemoveId)
+    setSelectedArtists(filter)
   }
 
   function dropObject(e: DragEvent<HTMLDivElement>, type: 'music' | 'artwork') {
@@ -351,17 +347,41 @@ export function FormMusic({ music }: FormMusicProps) {
   }
 
   useEffect(() => {
+    if (musicId) {      
+      const fetchMusic = async () => {
+        try {
+          const response = await api.get(`/musics/${musicId}`).then((res) => res.data as MusicResponseProps);
+          setMusic(response);
+        } catch (error) {
+          showToast('Error fetching music details', {
+            type: 'error',
+            theme: 'light',
+          });
+        }
+      };
+
+      fetchMusic();
+    }
+  }, [musicId]);
+
+  useEffect(() => {
     if (music) {
       setValue('album', music.album)
       setValue('artwork', music.artwork)
       setValue('color', music.color)
-      setValue('title', music.title)
-      setValue('title', music.title)
+      setValue('title', music.title)      
       setValue('url', music.url)
       setValue('genreId', music.genreId)
       setValue('id', music.id)
 
-      // setSelectedArtists(music.artists)
+      setValue('artistIds', music.artists.map((artist) => artist.id))
+
+      setSelectedArtists(music.artists.map((artist) => ({
+        id: artist.id,
+        name: artist.name,
+        photoURL: artist.photoURL,
+        musicalGenres: artist.musicalGenres.map((item) => item.name).join(', '),
+      })))
     }
   }, [music, setValue])
 
@@ -410,18 +430,19 @@ export function FormMusic({ music }: FormMusicProps) {
                       {artist.name}
                     </p>
                   </button>
-                  <button
+                  {!music && (
+                    <button
                     className="w-6 h-6 rounded-full bg-purple-700 items-center justify-center flex -ml-4 -mt-3 hover:bg-purple-500"
                     title="Remove"
                     onClick={() =>
-                      handleRemoveArtists(
-                        music ? String(music.id) : '',
+                      handleRemoveArtists(                       
                         artist.id,
                       )
                     }
                   >
                     <IoClose color={'#fff'} size={14} />
                   </button>
+                  )}
                 </div>
               ))}
             </div>

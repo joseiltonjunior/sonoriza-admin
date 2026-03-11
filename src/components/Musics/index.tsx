@@ -12,10 +12,8 @@ import {
   TrackListRemoteProps,
   handleTrackListRemote,
 } from '@/storage/modules/trackListRemote/reducer'
-import { deleteDoc, doc, getDoc } from 'firebase/firestore'
-import { firestore } from '@/services/firebase'
 import { useToast } from '@/hooks/useToast'
-import { useFirebaseServices } from '@/hooks/useFirebaseServices'
+import { api } from '@/services/api'
 
 export function Musics() {
   const { trackListRemote } = useSelector<ReduxProps, TrackListRemoteProps>(
@@ -28,7 +26,6 @@ export function Musics() {
 
   const { openModal, closeModal } = useModal()
   const { showToast } = useToast()
-  const { getMusics, removeMusicFromArtists } = useFirebaseServices()
 
   const handleFilterMusic = (filter: string) => {
     if (filter.length < 3) return setMusicFilteres(trackListRemote)
@@ -40,34 +37,21 @@ export function Musics() {
   }
 
   const handleRemoveMusic = async (music: MusicResponseProps) => {
-    const musicsCollection = 'musics'
-
     if (music.id) {
-      const musicsDocRef = doc(firestore, musicsCollection, music.id)
-
       try {
-        const musicsDoc = await getDoc(musicsDocRef)
+        await api.delete(`/musics/${music.id}`)
 
-        if (musicsDoc.exists()) {
-          await deleteDoc(musicsDocRef)
+        showToast('Music removed successfully', {
+          type: 'success',
+          theme: 'light',
+        })
 
-          showToast('Music removed successfully', {
-            type: 'success',
-            theme: 'light',
-          })
+        closeModal()
 
-          closeModal()
-
-          await removeMusicFromArtists(music)
-
-          const responseMusics = await getMusics()
-          dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
-        } else {
-          showToast('Artist not found', {
-            type: 'warning',
-            theme: 'light',
-          })
-        }
+        const responseMusics = await api
+          .get('/musics')
+          .then((res) => res.data.data as MusicResponseProps[])
+        dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
       } catch (error) {
         showToast(`Error removing artist`, {
           type: 'error',
@@ -108,7 +92,7 @@ export function Musics() {
             title="Open music"
             onClick={() => {
               openModal({
-                children: <FormMusic music={music} />,
+                children: <FormMusic musicId={music.id} />,
               })
             }}
           >

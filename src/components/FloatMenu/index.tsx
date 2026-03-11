@@ -1,12 +1,14 @@
 import { useFloatMenu } from '@/hooks/useFloatMenu'
 import { useModal } from '@/hooks/useModal'
 import { useNavigate } from 'react-router-dom'
-import { signOut } from 'firebase/auth'
-import { auth } from '@/services/firebase'
+
 import { useDispatch } from 'react-redux'
 import { handleSetArtists } from '@/storage/modules/artists/reducer'
 import { handleTrackListRemote } from '@/storage/modules/trackListRemote/reducer'
 import { handleSetMusicalGenres } from '@/storage/modules/musicalGenres/reducer'
+import { TOKEN_KEY } from '@/services/api'
+import { handleSetAdmin } from '@/storage/modules/admin/reducer'
+import { handleSetUsers } from '@/storage/modules/users/reducer'
 
 export function FloatMenu() {
   const { isVisible, show } = useFloatMenu()
@@ -18,7 +20,11 @@ export function FloatMenu() {
     dispatch(handleSetArtists({ artists: [] }))
     dispatch(handleTrackListRemote({ trackListRemote: [] }))
     dispatch(handleSetMusicalGenres({ musicalGenres: [] }))
-    await signOut(auth)
+    dispatch(
+      handleSetAdmin({ admin: { email: '', id: '', name: '', photoURL: '' } }),
+    )
+    dispatch(handleSetUsers({ users: [] }))
+    localStorage.removeItem(TOKEN_KEY)
     navigate('/')
   }
 

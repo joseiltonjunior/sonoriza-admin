@@ -5,6 +5,7 @@ export interface MusicResponseProps {
   title: string
   artists: ArtistsResponseProps[]
   genre: string
+  genreId: string
   album: string
   artwork: string
   id: string

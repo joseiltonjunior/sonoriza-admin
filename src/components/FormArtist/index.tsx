@@ -83,7 +83,7 @@ export function FormArtist({ artist }: FormArtistProps) {
     setIsLoading(true)
 
     try {
-      await api.post('/artists', {
+      await api.patch(`/artists/${artist?.id}`, {
         name: data.name,
         photoURL: data.photoURL,
         genreIds: [musicalGenresSelected[0].id],
@@ -215,7 +215,7 @@ export function FormArtist({ artist }: FormArtistProps) {
       return
     }
 
-    if (!file) {
+    if (!data.photoURL && !file) {
       showToast('Add artist photo', {
         type: 'error',
         theme: 'light',
@@ -224,11 +224,18 @@ export function FormArtist({ artist }: FormArtistProps) {
       return
     }
 
-    const response = await uploadObject({ file })
+    let formArtist: ArtistsEditDataProps
 
-    const formArtist = {
-      ...data,
-      photoURL: response[0].signedUrl,
+    if (file) {
+      const response = await uploadObject({ file })
+      formArtist = {
+        ...data,
+        photoURL: response[0].signedUrl,
+      }
+    } else {
+      formArtist = {
+        ...data,
+      }
     }
 
     if (data.id) {
@@ -249,8 +256,11 @@ export function FormArtist({ artist }: FormArtistProps) {
       setValue('id', artist.id)
       setValue('name', artist.name)
       setValue('photoURL', artist.photoURL)
+      setIsDrop(true)
 
-      setMusicalGenresSelected(artist.musicalGenres ?? [])
+      setValue('musicalGenres', artist.musicalGenres[0].id)
+
+      setMusicalGenresSelected(artist.musicalGenres)
     }
   }, [artist, setValue])
 
@@ -287,7 +297,7 @@ export function FormArtist({ artist }: FormArtistProps) {
                     className="keen-slider__slide flex flex-col items-center gap-2"
                     onClick={() => {
                       openModal({
-                        children: <FormMusic />,
+                        children: <FormMusic musicId={music.id}/>,
                       })
                     }}
                   >
@@ -374,64 +384,69 @@ export function FormArtist({ artist }: FormArtistProps) {
             />
           </div>
 
-          <div className="flex flex-col">
-            <h4 className="font-bold text-sm my-3">New photo</h4>
-            <div
-              onDragOver={(e) => e.preventDefault()}
-              onDragEnter={() => setIsDrop(true)}
-              className="border-dashed border border-purple-600 flex items-center justify-center rounded-xl h-[100px] overflow-hidden relative"
-            >
-              {file ? (
-                <div className="flex px-6 w-full">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={file.name}
-                    className="w-12 h-12 mr-2 rounded-full"
-                  />
-
-                  <div className="ml-2">
-                    <p className="font-medium text-sm">{file.name}</p>
-                    <span className="text-[#71839B] text-xs font-normal">
-                      {formatBytes(file.size)} - {formatDate(file.lastModified)}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFile(undefined)
-                    }}
-                    className="ml-auto"
-                  >
-                    <IoTrash color={colors.red[600]} size={20} />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="flex gap-2 items-center justify-center">
-                    <IoImage color={colors.purple[600]} size={20} />
-                    <p className="font-semibold text-purple-600">
-                      Drop a artist image
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {isDrop && (
+          {!artist?.id && (
+            <>
+              <div className="flex flex-col">
+                <h4 className="font-bold text-sm my-3">New photo</h4>
                 <div
-                  onDrop={dropObject}
-                  onDragLeave={() => setIsDrop(false)}
-                  className="bg-black/80 w-full h-full absolute top-0 flex items-center justify-center "
+                  onDragOver={(e) => e.preventDefault()}
+                  onDragEnter={() => setIsDrop(true)}
+                  className="border-dashed border border-purple-600 flex items-center justify-center rounded-xl h-[100px] overflow-hidden relative"
                 >
-                  <div className="pointer-events-none">
-                    <p className="text-white font-bold text-xl">
-                      Drop your file
-                    </p>
-                  </div>
+                  {file ? (
+                    <div className="flex px-6 w-full">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={file.name}
+                        className="w-12 h-12 mr-2 rounded-full"
+                      />
+
+                      <div className="ml-2">
+                        <p className="font-medium text-sm">{file.name}</p>
+                        <span className="text-[#71839B] text-xs font-normal">
+                          {formatBytes(file.size)} -{' '}
+                          {formatDate(file.lastModified)}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFile(undefined)
+                        }}
+                        className="ml-auto"
+                      >
+                        <IoTrash color={colors.red[600]} size={20} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-2 items-center justify-center">
+                        <IoImage color={colors.purple[600]} size={20} />
+                        <p className="font-semibold text-purple-600">
+                          Drop a artist image
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  {isDrop && (
+                    <div
+                      onDrop={dropObject}
+                      onDragLeave={() => setIsDrop(false)}
+                      className="bg-black/80 w-full h-full absolute top-0 flex items-center justify-center "
+                    >
+                      <div className="pointer-events-none">
+                        <p className="text-white font-bold text-xl">
+                          Drop your file
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="h-[1px] bg-gray-300/50 my-7" />

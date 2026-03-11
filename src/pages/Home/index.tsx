@@ -113,66 +113,18 @@ export function Home() {
     }
   }, [tag])
 
-  const handleFetchUnitObjectsMetric = async () => {
-    const cloudwatch = new AWS.CloudWatch()
-
-    const params = {
-      MetricName: 'NumberOfObjects',
-      Namespace: 'AWS/S3',
-      Dimensions: [
-        {
-          Name: 'BucketName',
-          Value: 'sonoriza-media',
-        },
-        {
-          Name: 'StorageType',
-          Value: 'AllStorageTypes',
-        },
-      ],
-      StartTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7),
-      EndTime: new Date(),
-      Period: 3600,
-      Statistics: ['Average'],
-    }
-
-    const data = await cloudwatch.getMetricStatistics(params).promise()
-    return data
-  }
-
-  const handleFetchTotalSizeMetric = async () => {
-    const cloudwatch = new AWS.CloudWatch()
-
-    const params = {
-      MetricName: 'BucketSizeBytes',
-      Namespace: 'AWS/S3',
-      Dimensions: [
-        {
-          Name: 'BucketName',
-          Value: 'sonoriza-media',
-        },
-        {
-          Name: 'StorageType',
-          Value: 'StandardStorage',
-        },
-      ],
-      StartTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7),
-      EndTime: new Date(),
-      Period: 3600,
-      Statistics: ['Average'],
-    }
-
-    const data = await cloudwatch.getMetricStatistics(params).promise()
-    return data
-  }
-
   useEffect(() => {
     async function handleFetchMetricsAWS() {
       try {
-        const responseSize = await handleFetchTotalSizeMetric()
+        const response = (await api
+          .get('/metrics/storage')
+          .then(
+            (res) => res.data.data,
+          )) as AWS.CloudWatch.GetMetricStatisticsOutput[]
 
-        const responseUnit = await handleFetchUnitObjectsMetric()
-
-        setBucketMetrics([responseSize, responseUnit])
+        if (response) {
+          setBucketMetrics(response)
+        }
       } catch (error) {
         showToast('Error fetching metric', {
           type: 'error',
