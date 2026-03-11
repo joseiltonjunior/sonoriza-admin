@@ -297,7 +297,7 @@ export function FormArtist({ artist }: FormArtistProps) {
                     className="keen-slider__slide flex flex-col items-center gap-2"
                     onClick={() => {
                       openModal({
-                        children: <FormMusic musicId={music.id}/>,
+                        children: <FormMusic musicId={music.id} />,
                       })
                     }}
                   >

@@ -1,4 +1,3 @@
-import AWS from 'aws-sdk'
 import { Layout } from '@/components/Layout'
 import { useToast } from '@/hooks/useToast'
 
@@ -37,7 +36,6 @@ import { FormArtist } from '@/components/FormArtist'
 import { MusicalGenres } from '@/components/MusicalGenres'
 import { SignCloudFrontUrl } from '@/components/SignCloudFrontUrl'
 import { Graphics } from '@/components/Graphics'
-import { Upload } from '@/components/Upload'
 import { FormMusicalGenres } from '@/components/FormMusicalGenres'
 import { Notifications } from '@/components/Notifications'
 import { api } from '@/services/api'
@@ -45,13 +43,14 @@ import { MusicalGenresDataProps } from '@/types/musicalGenresProps'
 import { MusicResponseProps } from '@/types/musicProps'
 import { ArtistsResponseProps } from '@/types/artistsProps'
 import { UserDataProps } from '@/types/userProps'
+import { GetMetricStatisticsOutput } from '@/types/metricsProps'
 
 export function Home() {
   const { showToast } = useToast()
   const { openModal } = useModal()
 
   const [bucketMetrics, setBucketMetrics] = useState<
-    AWS.CloudWatch.GetMetricStatisticsOutput[]
+    GetMetricStatisticsOutput[]
   >([])
 
   const { artists } = useSelector<ReduxProps, ArtistsProps>(
@@ -118,9 +117,7 @@ export function Home() {
       try {
         const response = (await api
           .get('/metrics/storage')
-          .then(
-            (res) => res.data.data,
-          )) as AWS.CloudWatch.GetMetricStatisticsOutput[]
+          .then((res) => res.data.data)) as GetMetricStatisticsOutput[]
 
         if (response) {
           setBucketMetrics(response)
@@ -238,9 +235,7 @@ export function Home() {
 
         {tag === 'signUrl' && <SignCloudFrontUrl />}
 
-        {tag === 'graphics' && <Graphics metricsS3={bucketMetrics} />}
-
-        {tag === 'upload' && <Upload />}
+        {tag === 'graphics' && <Graphics metricsS3={bucketMetrics} />}        
 
         {tag === 'notifications' && <Notifications />}
 

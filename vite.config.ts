@@ -1,4 +1,4 @@
-﻿import { defineConfig } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
@@ -25,11 +25,7 @@ export default defineConfig({
   build: {
     sourcemap: true,
     rollupOptions: {
-      output: {
-        manualChunks: {
-          'aws-sdk': ['aws-sdk'],
-        },
-      },
+      output: {},
     },
     commonjsOptions: {
       include: [/node_modules/],
