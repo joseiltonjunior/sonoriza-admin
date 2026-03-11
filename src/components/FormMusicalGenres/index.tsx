@@ -3,13 +3,12 @@ import { Input } from '../form/Input'
 import { useForm } from 'react-hook-form'
 import { Button } from '../Button'
 import { useEffect, useState } from 'react'
-import { addDoc, collection, doc, updateDoc } from 'firebase/firestore'
-import { firestore } from '@/services/firebase'
+
 import { useDispatch } from 'react-redux'
-import { useFirebaseServices } from '@/hooks/useFirebaseServices'
 import { handleSetMusicalGenres } from '@/storage/modules/musicalGenres/reducer'
 import { useToast } from '@/hooks/useToast'
 import { useModal } from '@/hooks/useModal'
+import { api } from '@/services/api'
 
 interface FormMusicalGenresProps {
   isExist?: MusicalGenresDataProps
@@ -23,29 +22,19 @@ export function FormMusicalGenres({ isExist }: FormMusicalGenresProps) {
   const dispatch = useDispatch()
   const { showToast } = useToast()
   const { closeModal } = useModal()
-  const { getGenres } = useFirebaseServices()
-
-  const musicalGenresCollection = 'musicalGenres'
 
   const handleSaveNewMusicalGenre = async (data: MusicalGenresDataProps) => {
     try {
-      const { id } = await addDoc(
-        collection(firestore, musicalGenresCollection),
-        {
-          ...data,
-        },
-      )
-
-      const musicalGenreDocRef = doc(firestore, musicalGenresCollection, id)
-
-      await updateDoc(musicalGenreDocRef, { id })
+      await api.post('/genres', data)
 
       showToast('Musical genre added successfully', {
         type: 'success',
         theme: 'light',
       })
 
-      const responseGenres = await getGenres()
+      const responseGenres = await api
+        .get('/genres')
+        .then((res) => res.data.data as MusicalGenresDataProps[])
       dispatch(handleSetMusicalGenres({ musicalGenres: responseGenres }))
 
       setIsLoading(false)
@@ -64,23 +53,23 @@ export function FormMusicalGenres({ isExist }: FormMusicalGenresProps) {
     id: string,
   ) => {
     try {
-      const musicalGenreDocRef = doc(firestore, musicalGenresCollection, id)
-
-      await updateDoc(musicalGenreDocRef, { name: data.name })
+      await api.patch(`/genres/${id}`, data)
 
       showToast('Musical genre edited successfully', {
         type: 'success',
         theme: 'light',
       })
 
-      const responseGenres = await getGenres()
+      const responseGenres = await api
+        .get('/genres')
+        .then((res) => res.data.data as MusicalGenresDataProps[])
       dispatch(handleSetMusicalGenres({ musicalGenres: responseGenres }))
 
       setIsLoading(false)
       closeModal()
     } catch (error) {
       setIsLoading(false)
-      showToast(`Error is edit to music`, {
+      showToast(`Error editing musical genre`, {
         type: 'error',
         theme: 'light',
       })

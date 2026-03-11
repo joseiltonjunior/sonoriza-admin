@@ -6,7 +6,7 @@ import { IoAdd, IoRemove } from 'react-icons/io5'
 import colors from 'tailwindcss/colors'
 
 import { useToast } from '@/hooks/useToast'
-import Lambda from 'aws-sdk/clients/lambda'
+import { api } from '@/services/api'
 
 interface SignCloudFrontProps {
   url1: string
@@ -22,25 +22,19 @@ export function SignCloudFrontUrl() {
 
   const { showToast } = useToast()
 
-  const handleSignedUrl = async (url: string[]) => {
-    const region = 'sa-east-1'
-    const lambda = new Lambda({ region })
-
-    const params = {
-      FunctionName: 'cloudfront-presign-url',
-      InvocationType: 'RequestResponse',
-      Payload: JSON.stringify({ url }),
-    }
-
+  const handleSignedUrl = async (urls: string[]) => {
     setIsLoading(true)
 
     try {
-      const response = await lambda.invoke(params).promise()
-      const responseObject = await JSON.parse(String(response.Payload))
+      const responses = await Promise.all(
+        urls.map((url) => api.post('/uploads/sign', { url })),
+      )
 
-      setUrlsSigned((prevUrls) => [...prevUrls, responseObject.signedUrl])
-      setIsLoading(false)
+      const signedUrls = responses.map((response) => response.data.signedUrl)
+
+      setUrlsSigned((prevUrls) => [...prevUrls, ...signedUrls])
     } catch (error) {
+      console.log(error)
       setIsLoading(false)
       showToast('Error calling Lambda function', {
         type: 'error',
@@ -52,9 +46,7 @@ export function SignCloudFrontUrl() {
   function submit(data: SignCloudFrontProps) {
     const urls = Object.values(data)
 
-    urls.forEach((url) => {
-      handleSignedUrl(url)
-    })
+    handleSignedUrl(urls)
   }
 
   function handleAddUrl() {

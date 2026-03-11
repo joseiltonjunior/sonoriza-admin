@@ -35,7 +35,7 @@ export function Aside({ isError }: AsideProps) {
               } mt-8 transition delay-75`}
               onClick={() => dispatch(handleSetTag({ tag: 'graphics' }))}
             >
-              Graphics
+              Health
               <IoAnalytics />
             </button>
 
@@ -45,7 +45,7 @@ export function Aside({ isError }: AsideProps) {
               }`}
               onClick={() => setFirebaseIsVisible(!firebaseIsVisible)}
             >
-              Firebase Database
+              Database
               <IoLogoFirebase />
             </button>
             {firebaseIsVisible && (
@@ -93,19 +93,20 @@ export function Aside({ isError }: AsideProps) {
               } mt-8`}
               onClick={() => setAwsIsVisible(!awsIsVisible)}
             >
-              Amazon AWS
+              S3
               <IoLogoAmazon />
             </button>
             {awsIsVisible && (
               <div className="flex-col flex items-start bg-white rounded-b-xl overflow-hidden">
-                <button
+                {/* <button
+                  disabled
                   className={`hover:bg-gray-100 w-full text-left p-2 font-medium pl-4 ${
                     tag === 'upload' && 'bg-gray-100'
                   }`}
                   onClick={() => dispatch(handleSetTag({ tag: 'upload' }))}
                 >
                   Bucket S3
-                </button>
+                </button> */}
                 <button
                   className={`hover:bg-gray-100 w-full text-left p-2 font-medium pl-4 ${
                     tag === 'signUrl' && 'bg-gray-100'

@@ -13,5 +13,5 @@ export interface ArtistsEditDataProps {
   id: string
   photoURL: string
   name: string
-  musicalGenres: MusicalGenresDataProps[]
+  musicalGenres: string
 }
