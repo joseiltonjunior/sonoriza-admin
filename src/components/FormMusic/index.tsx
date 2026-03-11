@@ -76,7 +76,7 @@ export function FormMusic({ musicId }: FormMusicProps) {
   const handleUpdateMusic = async (data: MusicFormDataProps, id: string) => {
     if (id) {
       try {
-        await api.patch(`/musics/${id}`, data)        
+        await api.patch(`/musics/${id}`, data)
 
         const responseArtists = await api
           .get('/artists')
@@ -234,7 +234,7 @@ export function FormMusic({ musicId }: FormMusicProps) {
         item.includes('.jpeg'),
     )
 
-    const newMusic = {      
+    const newMusic = {
       slug: slugify(data.title),
       artistIds: selectedArtists.map((artist) => artist.id),
       url: musicUrl ?? String(music?.url),
@@ -347,41 +347,50 @@ export function FormMusic({ musicId }: FormMusicProps) {
   }
 
   useEffect(() => {
-    if (musicId) {      
+    if (musicId) {
       const fetchMusic = async () => {
         try {
-          const response = await api.get(`/musics/${musicId}`).then((res) => res.data as MusicResponseProps);
-          setMusic(response);
+          const response = await api
+            .get(`/musics/${musicId}`)
+            .then((res) => res.data as MusicResponseProps)
+          setMusic(response)
         } catch (error) {
           showToast('Error fetching music details', {
             type: 'error',
             theme: 'light',
-          });
+          })
         }
-      };
+      }
 
-      fetchMusic();
+      fetchMusic()
     }
-  }, [musicId]);
+  }, [musicId])
 
   useEffect(() => {
     if (music) {
       setValue('album', music.album)
       setValue('artwork', music.artwork)
       setValue('color', music.color)
-      setValue('title', music.title)      
+      setValue('title', music.title)
       setValue('url', music.url)
       setValue('genreId', music.genreId)
       setValue('id', music.id)
 
-      setValue('artistIds', music.artists.map((artist) => artist.id))
+      setValue(
+        'artistIds',
+        music.artists.map((artist) => artist.id),
+      )
 
-      setSelectedArtists(music.artists.map((artist) => ({
-        id: artist.id,
-        name: artist.name,
-        photoURL: artist.photoURL,
-        musicalGenres: artist.musicalGenres.map((item) => item.name).join(', '),
-      })))
+      setSelectedArtists(
+        music.artists.map((artist) => ({
+          id: artist.id,
+          name: artist.name,
+          photoURL: artist.photoURL,
+          musicalGenres: artist.musicalGenres
+            .map((item) => item.name)
+            .join(', '),
+        })),
+      )
     }
   }, [music, setValue])
 
@@ -432,16 +441,12 @@ export function FormMusic({ musicId }: FormMusicProps) {
                   </button>
                   {!music && (
                     <button
-                    className="w-6 h-6 rounded-full bg-purple-700 items-center justify-center flex -ml-4 -mt-3 hover:bg-purple-500"
-                    title="Remove"
-                    onClick={() =>
-                      handleRemoveArtists(                       
-                        artist.id,
-                      )
-                    }
-                  >
-                    <IoClose color={'#fff'} size={14} />
-                  </button>
+                      className="w-6 h-6 rounded-full bg-purple-700 items-center justify-center flex -ml-4 -mt-3 hover:bg-purple-500"
+                      title="Remove"
+                      onClick={() => handleRemoveArtists(artist.id)}
+                    >
+                      <IoClose color={'#fff'} size={14} />
+                    </button>
                   )}
                 </div>
               ))}

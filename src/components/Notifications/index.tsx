@@ -7,7 +7,6 @@ import { IoImage, IoTrash } from 'react-icons/io5'
 import colors from 'tailwindcss/colors'
 import { UploadObjectProps } from '../FormArtist'
 
-import AWS from 'aws-sdk'
 import { useToast } from '@/hooks/useToast'
 import { useSelector } from 'react-redux'
 import { ReduxProps } from '@/storage'
@@ -30,7 +29,7 @@ export function Notifications() {
 
   const { showToast } = useToast()
 
-  const { formatBytes, formatDate, signedUrl } = useUpload()
+  const { formatBytes, formatDate } = useUpload()
 
   function dropObject(e: DragEvent<HTMLDivElement>) {
     e.preventDefault()
@@ -54,17 +53,7 @@ export function Notifications() {
   }
 
   const uploadObject = async ({ file }: UploadObjectProps) => {
-    const s3 = new AWS.S3()
-    const bucketName = 'sonoriza-media'
-
-    const params = {
-      Bucket: bucketName,
-      Key: `artists/${file.name}`,
-      Body: file,
-      ContentType: file.type,
-    }
-
-    return await s3.upload(params).promise()
+    console.log(file)
   }
 
   const onSubmit = async (data: NotificationsProps) => {
@@ -81,20 +70,16 @@ export function Notifications() {
 
     const response = await uploadObject({ file })
 
-    const {
-      responseObject: { signedUrl: imageUrl },
-    } = await signedUrl(import.meta.env.VITE_CLOUD_FRONT_DOMAIN + response.Key)
-
     const messages = users.map((user) => ({
       notification: {
         title,
         body,
-        imageUrl,
+        imageUrl: '', // Adicione a URL da imagem aqui, se necessário
       },
       token: user.tokenFcm,
     }))
 
-    console.log(messages)
+    console.log(messages, response)
   }
 
   return (

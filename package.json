@@ -17,17 +17,13 @@
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui"
   },
-  "dependencies": {
-    "@aws-sdk/client-lambda": "^3.454.0",
-    "@aws-sdk/credential-provider-cognito-identity": "^3.454.0",
+  "dependencies": {    
     "@hookform/resolvers": "^3.1.1",
     "@reduxjs/toolkit": "^1.9.7",
     "@vercel/analytics": "^1.0.1",
-    "apexcharts": "^3.44.0",
-    "aws-sdk": "^2.1498.0",
+    "apexcharts": "^3.44.0",    
     "axios": "1.13.6",
-    "extract-colors": "^4.0.2",
-    "firebase": "^10.1.0",
+    "extract-colors": "^4.0.2",    
     "i18next": "^23.3.0",
     "i18next-browser-languagedetector": "^7.1.0",
     "keen-slider": "^6.8.6",
