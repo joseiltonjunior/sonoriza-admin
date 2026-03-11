@@ -7,9 +7,10 @@ import ApexCharts from 'react-apexcharts'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import colors from 'tailwindcss/colors'
+import { GetMetricStatisticsOutput } from '@/types/metricsProps'
 
 interface GraphicsProps {
-  metricsS3: AWS.CloudWatch.GetMetricStatisticsOutput[]
+  metricsS3: GetMetricStatisticsOutput[]
 }
 
 interface GraphicData {

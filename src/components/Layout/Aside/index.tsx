@@ -97,16 +97,7 @@ export function Aside({ isError }: AsideProps) {
               <IoLogoAmazon />
             </button>
             {awsIsVisible && (
-              <div className="flex-col flex items-start bg-white rounded-b-xl overflow-hidden">
-                {/* <button
-                  disabled
-                  className={`hover:bg-gray-100 w-full text-left p-2 font-medium pl-4 ${
-                    tag === 'upload' && 'bg-gray-100'
-                  }`}
-                  onClick={() => dispatch(handleSetTag({ tag: 'upload' }))}
-                >
-                  Bucket S3
-                </button> */}
+              <div className="flex-col flex items-start bg-white rounded-b-xl overflow-hidden">               
                 <button
                   className={`hover:bg-gray-100 w-full text-left p-2 font-medium pl-4 ${
                     tag === 'signUrl' && 'bg-gray-100'
