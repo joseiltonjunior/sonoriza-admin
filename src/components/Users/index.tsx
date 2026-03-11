@@ -3,56 +3,47 @@ import colors from 'tailwindcss/colors'
 import { Select } from '../form/Select'
 import { useCallback, useMemo } from 'react'
 
-import { firestore } from '@/services/firebase'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { useToast } from '@/hooks/useToast'
 import { ReduxProps } from '@/storage'
 import { useDispatch, useSelector } from 'react-redux'
 import { UsersProps, handleSetUsers } from '@/storage/modules/users/reducer'
-import { useFirebaseServices } from '@/hooks/useFirebaseServices'
+
+import { api } from '@/services/api'
+import { UserDataProps } from '@/types/userProps'
 
 export function Users() {
   const { showToast } = useToast()
-
   const dispatch = useDispatch()
-
-  const { getUsers } = useFirebaseServices()
 
   const { users } = useSelector<ReduxProps, UsersProps>((state) => state.users)
 
   const plainOptions = useMemo(() => {
     return [
       { label: 'Select', value: '' },
-      { label: 'Free', value: 'free' },
-      { label: 'Premium', value: 'premium' },
+      { label: 'Active', value: 'true' },
+      { label: 'Disabled', value: 'false' },
     ]
   }, [])
 
   const handleSetUserPlan = useCallback(
-    async (userId: string, newPlan: string) => {
-      const usersCollection = 'users'
-      const userDocRef = doc(firestore, usersCollection, userId)
+    async (userId: string, isActive: string) => {
+      const transformedIsActive = isActive === 'true'
 
       try {
-        const userDoc = await getDoc(userDocRef)
+        await api.patch(`/users/${userId}/status`, {
+          isActive: transformedIsActive,
+        })
 
-        if (userDoc.exists()) {
-          await updateDoc(userDocRef, { plan: newPlan })
+        const usersResponse = await api.get('/users')
 
-          const usersResponse = await getUsers()
+        dispatch(
+          handleSetUsers({ users: usersResponse.data.data as UserDataProps[] }),
+        )
 
-          dispatch(handleSetUsers({ users: usersResponse }))
-
-          showToast('User plan updated successfully', {
-            type: 'success',
-            theme: 'light',
-          })
-        } else {
-          showToast('User not found', {
-            type: 'warning',
-            theme: 'light',
-          })
-        }
+        showToast('User plan updated successfully', {
+          type: 'success',
+          theme: 'light',
+        })
       } catch (error) {
         showToast(`Error updating user plan`, {
           type: 'error',
@@ -60,7 +51,7 @@ export function Users() {
         })
       }
     },
-    [dispatch, getUsers, showToast],
+    [dispatch, showToast],
   )
 
   const handleCopyClick = async (url: string) => {
@@ -82,14 +73,14 @@ export function Users() {
     <>
       {users.map((user) => (
         <div
-          key={user.uid}
+          key={user.id}
           className={`bg-white rounded-2xl p-7 mt-8 top-5 flex gap-12 justify-between items-center border hover:border-gray-300 w-full `}
         >
           <div className="flex items-center gap-6">
             <div className="bg-gray-700 w-16 h-16 rounded-full overflow-hidden">
-              {user.photoURL ? (
+              {user.photoUrl ? (
                 <img
-                  src={user.photoURL}
+                  src={user.photoUrl}
                   alt="user photo profile"
                   className="w-full h-full object-cover"
                 />
@@ -139,10 +130,10 @@ export function Users() {
           </div>
 
           <Select
-            label="Plan"
+            label="Status"
             options={plainOptions}
-            onChange={(e) => handleSetUserPlan(user.uid, e.currentTarget.value)}
-            value={user.plan ?? 'free'}
+            onChange={(e) => handleSetUserPlan(user.id, e.currentTarget.value)}
+            value={user.isActive ? 'true' : 'false'}
           />
 
           {user.tokenFcm && (

@@ -32,7 +32,7 @@ import {
   handleSetMusicalGenres,
 } from '@/storage/modules/musicalGenres/reducer'
 
-import { UsersProps } from '@/storage/modules/users/reducer'
+import { handleSetUsers, UsersProps } from '@/storage/modules/users/reducer'
 import { FormArtist } from '@/components/FormArtist'
 import { MusicalGenres } from '@/components/MusicalGenres'
 import { SignCloudFrontUrl } from '@/components/SignCloudFrontUrl'
@@ -44,6 +44,7 @@ import { api } from '@/services/api'
 import { MusicalGenresDataProps } from '@/types/musicalGenresProps'
 import { MusicResponseProps } from '@/types/musicProps'
 import { ArtistsResponseProps } from '@/types/artistsProps'
+import { UserDataProps } from '@/types/userProps'
 
 export function Home() {
   const { showToast } = useToast()
@@ -112,66 +113,18 @@ export function Home() {
     }
   }, [tag])
 
-  const handleFetchUnitObjectsMetric = async () => {
-    const cloudwatch = new AWS.CloudWatch()
-
-    const params = {
-      MetricName: 'NumberOfObjects',
-      Namespace: 'AWS/S3',
-      Dimensions: [
-        {
-          Name: 'BucketName',
-          Value: 'sonoriza-media',
-        },
-        {
-          Name: 'StorageType',
-          Value: 'AllStorageTypes',
-        },
-      ],
-      StartTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7),
-      EndTime: new Date(),
-      Period: 3600,
-      Statistics: ['Average'],
-    }
-
-    const data = await cloudwatch.getMetricStatistics(params).promise()
-    return data
-  }
-
-  const handleFetchTotalSizeMetric = async () => {
-    const cloudwatch = new AWS.CloudWatch()
-
-    const params = {
-      MetricName: 'BucketSizeBytes',
-      Namespace: 'AWS/S3',
-      Dimensions: [
-        {
-          Name: 'BucketName',
-          Value: 'sonoriza-media',
-        },
-        {
-          Name: 'StorageType',
-          Value: 'StandardStorage',
-        },
-      ],
-      StartTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7),
-      EndTime: new Date(),
-      Period: 3600,
-      Statistics: ['Average'],
-    }
-
-    const data = await cloudwatch.getMetricStatistics(params).promise()
-    return data
-  }
-
   useEffect(() => {
     async function handleFetchMetricsAWS() {
       try {
-        const responseSize = await handleFetchTotalSizeMetric()
+        const response = (await api
+          .get('/metrics/storage')
+          .then(
+            (res) => res.data.data,
+          )) as AWS.CloudWatch.GetMetricStatisticsOutput[]
 
-        const responseUnit = await handleFetchUnitObjectsMetric()
-
-        setBucketMetrics([responseSize, responseUnit])
+        if (response) {
+          setBucketMetrics(response)
+        }
       } catch (error) {
         showToast('Error fetching metric', {
           type: 'error',
@@ -181,17 +134,18 @@ export function Home() {
     }
 
     handleFetchMetricsAWS()
-  }, [])
+  }, [showToast])
 
   useEffect(() => {
     async function loadInitialData() {
       try {
         setIsLoading(true)
-        const [musicsResponse, artistsResponse, genresResponse] =
+        const [musicsResponse, artistsResponse, genresResponse, usersResponse] =
           await Promise.all([
             api.get('/musics'),
             api.get('/artists'),
             api.get('/genres'),
+            api.get('/users'),
           ])
 
         dispatch(
@@ -212,6 +166,10 @@ export function Home() {
           }),
         )
 
+        dispatch(
+          handleSetUsers({ users: usersResponse.data.data as UserDataProps[] }),
+        )
+
         setIsLoading(false)
       } catch (error) {
         setIsLoading(false)
@@ -223,7 +181,7 @@ export function Home() {
     }
 
     loadInitialData()
-  }, [dispatch])
+  }, [dispatch, showToast])
 
   return (
     <Layout>

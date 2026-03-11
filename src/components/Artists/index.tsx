@@ -1,13 +1,10 @@
-import { useFirebaseServices } from '@/hooks/useFirebaseServices'
 import { useToast } from '@/hooks/useToast'
-import { firestore } from '@/services/firebase'
 import { ReduxProps } from '@/storage'
 import {
   ArtistsProps,
   handleSetArtists,
 } from '@/storage/modules/artists/reducer'
 import { ArtistsResponseProps } from '@/types/artistsProps'
-import { deleteDoc, doc, getDoc } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 
 import {
@@ -21,6 +18,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import colors from 'tailwindcss/colors'
 import { FormArtist } from '../FormArtist'
 import { useModal } from '@/hooks/useModal'
+import { api } from '@/services/api'
 
 export function Artists() {
   const { artists } = useSelector<ReduxProps, ArtistsProps>(
@@ -37,8 +35,6 @@ export function Artists() {
 
   const { showToast } = useToast()
 
-  const { getArtists } = useFirebaseServices()
-
   const handleFilterArtists = (filter: string) => {
     if (filter.length < 3) return setArtistsFiltered(artists)
     const listFiltered = artists.filter((artist) =>
@@ -48,32 +44,21 @@ export function Artists() {
     setArtistsFiltered(listFiltered)
   }
   const handleRemoveArtist = async (artistId: string) => {
-    const artistsCollection = 'artists'
-
     if (artistId) {
-      const artistsDocRef = doc(firestore, artistsCollection, artistId)
-
       try {
-        const artistsDoc = await getDoc(artistsDocRef)
+        await api.delete(`/artists/${artistId}`)
 
-        if (artistsDoc.exists()) {
-          await deleteDoc(artistsDocRef)
+        showToast('Artist removed successfully', {
+          type: 'success',
+          theme: 'light',
+        })
 
-          showToast('Artist removed successfully', {
-            type: 'success',
-            theme: 'light',
-          })
+        closeModal()
 
-          closeModal()
-
-          const responseArtists = await getArtists()
-          dispatch(handleSetArtists({ artists: responseArtists }))
-        } else {
-          showToast('Artist not found', {
-            type: 'warning',
-            theme: 'light',
-          })
-        }
+        const responseArtists = await api
+          .get('/artists')
+          .then((res) => res.data.data as ArtistsResponseProps[])
+        dispatch(handleSetArtists({ artists: responseArtists }))
       } catch (error) {
         showToast(`Error removing artist`, {
           type: 'error',

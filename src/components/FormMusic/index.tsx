@@ -3,7 +3,7 @@ import { extractColors } from 'extract-colors'
 import { Input } from '@/components/form/Input'
 import { useForm } from 'react-hook-form'
 
-import { MusicEditDataProps, MusicResponseProps } from '@/types/musicProps'
+import { MusicFormDataProps, MusicResponseProps } from '@/types/musicProps'
 
 import { DragEvent, useEffect, useMemo, useState } from 'react'
 import { Select } from '../form/Select'
@@ -13,8 +13,7 @@ import {
 } from '@/types/artistsProps'
 import { useToast } from '@/hooks/useToast'
 import { IoClose, IoImage, IoMusicalNote, IoTrash } from 'react-icons/io5'
-import { addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore'
-import { firestore } from '@/services/firebase'
+
 import { useModal } from '@/hooks/useModal'
 import { useDispatch, useSelector } from 'react-redux'
 import { ReduxProps } from '@/storage'
@@ -23,19 +22,17 @@ import {
   handleSetArtists,
 } from '@/storage/modules/artists/reducer'
 import { MusicalGenresProps } from '@/storage/modules/musicalGenres/reducer'
-import {
-  musicsCollection,
-  useFirebaseServices,
-} from '@/hooks/useFirebaseServices'
+
 import { handleTrackListRemote } from '@/storage/modules/trackListRemote/reducer'
 import { FormArtist } from '../FormArtist'
 import colors from 'tailwindcss/colors'
 import { FileWithType, useUpload } from '@/hooks/useUpload'
 
-import AWS from 'aws-sdk'
+import { api } from '@/services/api'
+import { UploadObjectResponseProps } from '@/types/uploadProps'
 
 interface FormMusicProps {
-  music?: MusicResponseProps
+  musicId?: string
 }
 
 interface UploadObjectProps {
@@ -44,7 +41,7 @@ interface UploadObjectProps {
   artist: string
 }
 
-export function FormMusic({ music }: FormMusicProps) {
+export function FormMusic({ musicId }: FormMusicProps) {
   const [selectedArtists, setSelectedArtists] = useState<
     ArtistsEditDataProps[]
   >([])
@@ -55,18 +52,18 @@ export function FormMusic({ music }: FormMusicProps) {
   const [isDropMusic, setIsDropMusic] = useState(false)
   const [fileArtwork, setFileArtwork] = useState<FileWithType>()
   const [fileMusic, setFileMusic] = useState<FileWithType>()
+  const [music, setMusic] = useState<MusicResponseProps>()
 
   const [paletColorsArtwork, setPaletColorsArtwork] = useState<string[]>([])
   const [selectColor, setSelectColor] = useState('')
 
-  const { register, setValue, handleSubmit } = useForm<MusicEditDataProps>()
-  const { getMusics, getArtists, addMusicInArtists, removeMusicFromArtists } =
-    useFirebaseServices()
+  const { register, setValue, handleSubmit } = useForm<MusicFormDataProps>()
+
   const { showToast } = useToast()
   const dispatch = useDispatch()
   const { closeModal, openModal } = useModal()
 
-  const { formatBytes, formatDate, signedUrl, copyObjectUrl } = useUpload()
+  const { formatBytes, formatDate, copyObjectUrl } = useUpload()
 
   const { artists } = useSelector<ReduxProps, ArtistsProps>(
     (state) => state.artists,
@@ -76,34 +73,26 @@ export function FormMusic({ music }: FormMusicProps) {
     (state) => state.musicalGenres,
   )
 
-  const handleUpdateMusic = async (data: MusicEditDataProps) => {
-    if (data.id) {
-      const musicsDocRef = doc(firestore, musicsCollection, data.id)
-
+  const handleUpdateMusic = async (data: MusicFormDataProps, id: string) => {
+    if (id) {
       try {
-        const musicsDoc = await getDoc(musicsDocRef)
+        await api.patch(`/musics/${id}`, data)        
 
-        if (musicsDoc.exists()) {
-          await updateDoc(musicsDocRef, { ...data })
+        const responseArtists = await api
+          .get('/artists')
+          .then((res) => res.data.data as ArtistsResponseProps[])
+        dispatch(handleSetArtists({ artists: responseArtists }))
 
-          await addMusicInArtists(data)
+        showToast('Music updated successfully', {
+          type: 'success',
+          theme: 'light',
+        })
 
-          const responseArtists = await getArtists()
-          dispatch(handleSetArtists({ artists: responseArtists }))
+        const responseMusics = await api
+          .get('/musics')
+          .then((res) => res.data.data as MusicResponseProps[])
+        dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
 
-          showToast('Music updated successfully', {
-            type: 'success',
-            theme: 'light',
-          })
-
-          const responseMusics = await getMusics()
-          dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
-        } else {
-          showToast('Music not found', {
-            type: 'warning',
-            theme: 'light',
-          })
-        }
         setIsLoading(false)
         closeModal()
       } catch (error) {
@@ -116,27 +105,23 @@ export function FormMusic({ music }: FormMusicProps) {
     }
   }
 
-  const handleSaveMusic = async (data: MusicEditDataProps) => {
+  const handleSaveMusic = async (data: MusicFormDataProps) => {
     try {
-      const { id } = await addDoc(collection(firestore, musicsCollection), {
-        ...data,
-      })
-
-      const musicsDocRef = doc(firestore, musicsCollection, id)
-
-      await updateDoc(musicsDocRef, { id })
-
-      await addMusicInArtists({ ...data, id })
+      await api.post('/musics', data)
 
       showToast('Music added successfully', {
         type: 'success',
         theme: 'light',
       })
 
-      const responseArtists = await getArtists()
+      const responseArtists = await api
+        .get('/artists')
+        .then((res) => res.data.data as ArtistsResponseProps[])
       dispatch(handleSetArtists({ artists: responseArtists }))
 
-      const responseMusics = await getMusics()
+      const responseMusics = await api
+        .get('/musics')
+        .then((res) => res.data.data as MusicResponseProps[])
       dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
 
       setIsLoading(false)
@@ -150,25 +135,32 @@ export function FormMusic({ music }: FormMusicProps) {
     }
   }
 
+  const slugify = (value: string) =>
+    value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\.[^/.]+$/, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+
   const uploadObject = async ({ files, artist }: UploadObjectProps) => {
-    const s3 = new AWS.S3()
-    const bucketName = 'sonoriza-media'
+    const formData = new FormData()
 
-    const uploadPromises = files.map(async (file) => {
-      const params = {
-        Bucket: bucketName,
-        Key: `musics/${artist}/${file.name}`,
-        Body: file,
-        ContentType: file.type,
-      }
-
-      return await s3.upload(params).promise()
+    files.forEach((file) => {
+      formData.append('files', file)
     })
+    formData.append('folder', 'musics')
+    formData.append('slug', slugify(artist))
 
-    return await Promise.all(uploadPromises)
+    const objectPathSigned = await api
+      .post('/uploads', formData)
+      .then((res) => res.data.files as UploadObjectResponseProps[])
+
+    return objectPathSigned
   }
 
-  async function submit(data: MusicEditDataProps) {
+  async function submit(data: MusicFormDataProps) {
     if (selectedArtists.length < 1) {
       showToast('Select at least one artist', {
         type: 'error',
@@ -196,7 +188,7 @@ export function FormMusic({ music }: FormMusicProps) {
       return
     }
 
-    if (!data.genre) {
+    if (!data.genreId) {
       showToast('Select at least one musical genre', {
         type: 'error',
         theme: 'light',
@@ -224,20 +216,12 @@ export function FormMusic({ music }: FormMusicProps) {
 
       const response = await uploadObject({
         files: filesToUpload,
-        artist: selectedArtists[0].name
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-zA-Z0-9]/g, '-')
-          .toLowerCase(),
+        artist: selectedArtists[0].name,
       })
 
       await Promise.all(
         response.map(async (item) => {
-          const { responseObject } = await signedUrl(
-            `${import.meta.env.VITE_CLOUD_FRONT_DOMAIN}${item.Key}`,
-          )
-
-          urlsSigned.push(responseObject.signedUrl)
+          urlsSigned.push(item.signedUrl)
         }),
       )
     }
@@ -250,15 +234,19 @@ export function FormMusic({ music }: FormMusicProps) {
         item.includes('.jpeg'),
     )
 
-    const newMusic = {
-      ...data,
-      artists: selectedArtists,
+    const newMusic = {      
+      slug: slugify(data.title),
+      artistIds: selectedArtists.map((artist) => artist.id),
       url: musicUrl ?? String(music?.url),
       artwork: artworkUrl ?? String(music?.artwork),
+      genreId: data.genreId,
+      album: data.album,
+      color: data.color,
+      title: data.title,
     }
 
     if (data.id) {
-      handleUpdateMusic(newMusic)
+      handleUpdateMusic(newMusic, data.id)
     } else {
       handleSaveMusic(newMusic)
     }
@@ -268,7 +256,7 @@ export function FormMusic({ music }: FormMusicProps) {
     const options = musicalGenres?.map((genre) => {
       return {
         label: genre.name,
-        value: genre.name,
+        value: genre.id,
       }
     })
 
@@ -300,21 +288,17 @@ export function FormMusic({ music }: FormMusicProps) {
 
     setSelectedArtists([
       ...selectedArtists,
-      { id, name, photoURL, musicalGenres },
+      {
+        id,
+        name,
+        photoURL,
+        musicalGenres: musicalGenres.map((item) => item.name).join(', '),
+      },
     ])
-    setValue('artists', [])
+    setValue('artistIds', [])
   }
 
-  const handleRemoveArtists = async (
-    music: MusicEditDataProps,
-    artistRemoveId: string,
-  ) => {
-    if (music && music.artists.find((item) => item.id === artistRemoveId)) {
-      await removeMusicFromArtists(music)
-      const responseArtists = await getArtists()
-      dispatch(handleSetArtists({ artists: responseArtists }))
-    }
-
+  const handleRemoveArtists = async (artistRemoveId: string) => {
     const filter = selectedArtists.filter((item) => item.id !== artistRemoveId)
     setSelectedArtists(filter)
   }
@@ -363,17 +347,41 @@ export function FormMusic({ music }: FormMusicProps) {
   }
 
   useEffect(() => {
+    if (musicId) {      
+      const fetchMusic = async () => {
+        try {
+          const response = await api.get(`/musics/${musicId}`).then((res) => res.data as MusicResponseProps);
+          setMusic(response);
+        } catch (error) {
+          showToast('Error fetching music details', {
+            type: 'error',
+            theme: 'light',
+          });
+        }
+      };
+
+      fetchMusic();
+    }
+  }, [musicId]);
+
+  useEffect(() => {
     if (music) {
       setValue('album', music.album)
       setValue('artwork', music.artwork)
       setValue('color', music.color)
-      setValue('title', music.title)
-      setValue('title', music.title)
+      setValue('title', music.title)      
       setValue('url', music.url)
-      setValue('genre', music.genre)
+      setValue('genreId', music.genreId)
       setValue('id', music.id)
 
-      setSelectedArtists(music.artists)
+      setValue('artistIds', music.artists.map((artist) => artist.id))
+
+      setSelectedArtists(music.artists.map((artist) => ({
+        id: artist.id,
+        name: artist.name,
+        photoURL: artist.photoURL,
+        musicalGenres: artist.musicalGenres.map((item) => item.name).join(', '),
+      })))
     }
   }, [music, setValue])
 
@@ -422,18 +430,19 @@ export function FormMusic({ music }: FormMusicProps) {
                       {artist.name}
                     </p>
                   </button>
-                  <button
+                  {!music && (
+                    <button
                     className="w-6 h-6 rounded-full bg-purple-700 items-center justify-center flex -ml-4 -mt-3 hover:bg-purple-500"
                     title="Remove"
                     onClick={() =>
-                      handleRemoveArtists(
-                        music as MusicEditDataProps,
+                      handleRemoveArtists(                       
                         artist.id,
                       )
                     }
                   >
                     <IoClose color={'#fff'} size={14} />
                   </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -605,7 +614,7 @@ export function FormMusic({ music }: FormMusicProps) {
             <Select
               options={artistsOptions}
               label="Artists"
-              name="artists"
+              name="artistIds"
               register={register}
               onChange={(e) => handleSelectedArtists(e.currentTarget.value)}
               required
@@ -616,7 +625,7 @@ export function FormMusic({ music }: FormMusicProps) {
             <Select
               options={musicalGenresOtions}
               label="Musical Genrer"
-              name="genre"
+              name="genreId"
               register={register}
               required
             />

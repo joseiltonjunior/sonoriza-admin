@@ -5,9 +5,6 @@ export const TOKEN_KEY = '@sonoriza:token'
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 })
 
 api.interceptors.request.use((config) => {
