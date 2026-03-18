@@ -75,18 +75,115 @@ export function FormMusic({ musicId }: FormMusicProps) {
 
   const handleUpdateMusic = async (data: MusicFormDataProps, id: string) => {
     if (id) {
-      try {
-        await api.patch(`/musics/${id}`, data)
+      await api
+        .patch(`/musics/${id}`, data)
+        .then(async () => {
+          const urlsSigned: string[] = []
+
+          if (fileArtwork || fileMusic) {
+            const filesToUpload = fileArtwork ? [fileArtwork] : []
+            if (fileMusic) filesToUpload.push(fileMusic)
+
+            const response = await uploadObject({
+              files: filesToUpload,
+              artist: selectedArtists[0].title,
+            })
+
+            await Promise.all(
+              response.map(async (item) => {
+                urlsSigned.push(item.signedUrl)
+              }),
+            )
+          }
+
+          const musicUrl = urlsSigned.find((item) => item.includes('.mp3'))
+          const artworkUrl = urlsSigned.find(
+            (item) =>
+              item.includes('.png') ||
+              item.includes('.jpg') ||
+              item.includes('.jpeg'),
+          )
+
+          await api.patch(`/musics/${id}`, {
+            url: musicUrl,
+            artwork: artworkUrl,
+          })
+
+          const responseArtists = await api
+            .get('/artists')
+            .then((res) => res.data.data as ArtistsResponseProps[])
+          dispatch(handleSetArtists({ artists: responseArtists }))
+
+          showToast('Music updated successfully', {
+            type: 'success',
+            theme: 'light',
+          })
+
+          const responseMusics = await api
+            .get('/musics')
+            .then((res) => res.data.data as MusicResponseProps[])
+          dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
+
+          setIsLoading(false)
+          closeModal()
+        })
+        .catch((err) => {
+          const errResponse = err.response.data
+          setIsLoading(false)
+          showToast(`${errResponse.message}`, {
+            type: 'error',
+            theme: 'light',
+          })
+        })
+    }
+  }
+
+  const handleSaveMusic = async (data: MusicFormDataProps) => {
+    await api
+      .post('/musics', data)
+      .then(async (response) => {
+        const responseMusic = response.data as MusicResponseProps
+
+        const urlsSigned: string[] = []
+
+        if (fileArtwork || fileMusic) {
+          const filesToUpload = fileArtwork ? [fileArtwork] : []
+          if (fileMusic) filesToUpload.push(fileMusic)
+
+          const response = await uploadObject({
+            files: filesToUpload,
+            artist: selectedArtists[0].title,
+          })
+
+          await Promise.all(
+            response.map(async (item) => {
+              urlsSigned.push(item.signedUrl)
+            }),
+          )
+        }
+
+        const musicUrl = urlsSigned.find((item) => item.includes('.mp3'))
+        const artworkUrl = urlsSigned.find(
+          (item) =>
+            item.includes('.png') ||
+            item.includes('.jpg') ||
+            item.includes('.jpeg'),
+        )
+
+        await api.patch(`/musics/${responseMusic.id}`, {
+          url: musicUrl,
+          artwork: artworkUrl,
+        })
+
+        showToast('Music added successfully', {
+          type: 'success',
+          theme: 'light',
+        })
 
         const responseArtists = await api
           .get('/artists')
           .then((res) => res.data.data as ArtistsResponseProps[])
         dispatch(handleSetArtists({ artists: responseArtists }))
-
-        showToast('Music updated successfully', {
-          type: 'success',
-          theme: 'light',
-        })
 
         const responseMusics = await api
           .get('/musics')
@@ -95,44 +192,15 @@ export function FormMusic({ musicId }: FormMusicProps) {
 
         setIsLoading(false)
         closeModal()
-      } catch (error) {
+      })
+      .catch((err) => {
+        const errResponse = err.response.data
         setIsLoading(false)
-        showToast(`Error updating music`, {
+        showToast(`${errResponse.message}`, {
           type: 'error',
           theme: 'light',
         })
-      }
-    }
-  }
-
-  const handleSaveMusic = async (data: MusicFormDataProps) => {
-    try {
-      await api.post('/musics', data)
-
-      showToast('Music added successfully', {
-        type: 'success',
-        theme: 'light',
       })
-
-      const responseArtists = await api
-        .get('/artists')
-        .then((res) => res.data.data as ArtistsResponseProps[])
-      dispatch(handleSetArtists({ artists: responseArtists }))
-
-      const responseMusics = await api
-        .get('/musics')
-        .then((res) => res.data.data as MusicResponseProps[])
-      dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
-
-      setIsLoading(false)
-      closeModal()
-    } catch (error) {
-      setIsLoading(false)
-      showToast(`Error adding music`, {
-        type: 'error',
-        theme: 'light',
-      })
-    }
   }
 
   const slugify = (value: string) =>
@@ -208,37 +276,10 @@ export function FormMusic({ musicId }: FormMusicProps) {
 
     setIsLoading(true)
 
-    const urlsSigned: string[] = []
-
-    if (fileArtwork || fileMusic) {
-      const filesToUpload = fileArtwork ? [fileArtwork] : []
-      if (fileMusic) filesToUpload.push(fileMusic)
-
-      const response = await uploadObject({
-        files: filesToUpload,
-        artist: selectedArtists[0].name,
-      })
-
-      await Promise.all(
-        response.map(async (item) => {
-          urlsSigned.push(item.signedUrl)
-        }),
-      )
-    }
-
-    const musicUrl = urlsSigned.find((item) => item.includes('.mp3'))
-    const artworkUrl = urlsSigned.find(
-      (item) =>
-        item.includes('.png') ||
-        item.includes('.jpg') ||
-        item.includes('.jpeg'),
-    )
-
     const newMusic = {
-      slug: slugify(data.title),
       artistIds: selectedArtists.map((artist) => artist.id),
-      url: musicUrl ?? String(music?.url),
-      artwork: artworkUrl ?? String(music?.artwork),
+      url: data.url ? data.url : 'https://i.ibb.co/hZ7QNB3/sonoriza.png',
+      artwork: data.artwork ? data.artwork : 'https://i.ibb.co/hZ7QNB3/sonoriza.png',
       genreId: data.genreId,
       album: data.album,
       color: data.color,
@@ -255,7 +296,7 @@ export function FormMusic({ musicId }: FormMusicProps) {
   const musicalGenresOtions = useMemo(() => {
     const options = musicalGenres?.map((genre) => {
       return {
-        label: genre.name,
+        label: genre.title,
         value: genre.id,
       }
     })
@@ -268,7 +309,7 @@ export function FormMusic({ musicId }: FormMusicProps) {
   const artistsOptions = useMemo(() => {
     const options = artists?.map((artist) => {
       return {
-        label: artist.name,
+        label: artist.title,
         value: artist.id,
       }
     })
@@ -279,7 +320,7 @@ export function FormMusic({ musicId }: FormMusicProps) {
   }, [artists])
 
   const handleSelectedArtists = (artistId: string) => {
-    const { id, name, photoURL, musicalGenres } = artists?.find(
+    const { id, title, photoURL, musicalGenres } = artists?.find(
       (artist) => artist.id === artistId,
     ) as ArtistsResponseProps
 
@@ -290,9 +331,9 @@ export function FormMusic({ musicId }: FormMusicProps) {
       ...selectedArtists,
       {
         id,
-        name,
+        title,
         photoURL,
-        musicalGenres: musicalGenres.map((item) => item.name).join(', '),
+        musicalGenres: musicalGenres.map((item) => item.title).join(', '),
       },
     ])
     setValue('artistIds', [])
@@ -384,10 +425,10 @@ export function FormMusic({ musicId }: FormMusicProps) {
       setSelectedArtists(
         music.artists.map((artist) => ({
           id: artist.id,
-          name: artist.name,
+          title: artist.title,
           photoURL: artist.photoURL,
           musicalGenres: artist.musicalGenres
-            .map((item) => item.name)
+            .map((item) => item.title)
             .join(', '),
         })),
       )
@@ -432,11 +473,11 @@ export function FormMusic({ musicId }: FormMusicProps) {
                     <img
                       src={artist.photoURL}
                       alt="photo artists"
-                      title={artist.name}
+                      title={artist.title}
                       className="object-cover w-28 h-28 rounded-xl"
                     />
                     <p className="text-center text-sm font-medium">
-                      {artist.name}
+                      {artist.title}
                     </p>
                   </button>
                   {!music && (

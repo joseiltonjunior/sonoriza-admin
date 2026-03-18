@@ -20,18 +20,16 @@ export function Users() {
   const plainOptions = useMemo(() => {
     return [
       { label: 'Select', value: '' },
-      { label: 'Active', value: 'true' },
-      { label: 'Disabled', value: 'false' },
+      { label: 'Active', value: 'ACTIVE' },
+      { label: 'Disabled', value: 'SUSPENDED' },
     ]
   }, [])
 
-  const handleSetUserPlan = useCallback(
-    async (userId: string, isActive: string) => {
-      const transformedIsActive = isActive === 'true'
-
+  const handleChangeUserStts = useCallback(
+    async (userId: string, isStatus: string) => {      
       try {
         await api.patch(`/users/${userId}/status`, {
-          isActive: transformedIsActive,
+          accountStatus: isStatus,
         })
 
         const usersResponse = await api.get('/users')
@@ -132,8 +130,8 @@ export function Users() {
           <Select
             label="Status"
             options={plainOptions}
-            onChange={(e) => handleSetUserPlan(user.id, e.currentTarget.value)}
-            value={user.isActive ? 'true' : 'false'}
+            onChange={(e) => handleChangeUserStts(user.id, e.currentTarget.value)}
+            value={user.accountStatus}
           />
 
           {user.tokenFcm && (

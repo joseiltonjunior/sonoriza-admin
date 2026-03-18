@@ -27,7 +27,7 @@ export function MusicalGenres() {
     <div>
       {musicalGenres.map((genre) => (
         <button
-          key={genre.name}
+          key={genre.title}
           className={`bg-white rounded-2xl p-7 mt-8 top-5 flex gap-12 justify-between items-center border hover:border-gray-300 w-full `}
           onClick={() => {
             openModal({
@@ -35,13 +35,15 @@ export function MusicalGenres() {
             })
           }}
         >
-          <p className="font-semibold text-gray-500">{genre.name}</p>
+          <p className="font-semibold text-gray-500">{genre.title}</p>
           <div
             className="flex items-center gap-2 cursor-pointer"
             title="Musics"
           >
             <IoMusicalNoteSharp size={18} color={colors.purple[600]} />
-            <p className="font-semibold">{handleGetMusicByGenre(genre.name)}</p>
+            <p className="font-semibold">
+              {handleGetMusicByGenre(genre.title)}
+            </p>
           </div>
         </button>
       ))}
