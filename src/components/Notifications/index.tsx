@@ -5,7 +5,7 @@ import { DragEvent, useState } from 'react'
 import { FileWithType, useUpload } from '@/hooks/useUpload'
 import { IoImage, IoTrash } from 'react-icons/io5'
 import colors from 'tailwindcss/colors'
-import { UploadObjectProps } from '../FormArtist'
+// import { UploadObjectProps } from '../FormArtist'
 
 import { useToast } from '@/hooks/useToast'
 import { useSelector } from 'react-redux'
@@ -52,9 +52,9 @@ export function Notifications() {
     setIsDrop(false)
   }
 
-  const uploadObject = async ({ file }: UploadObjectProps) => {
-    console.log(file)
-  }
+  // const uploadObject = async ({ file }: UploadObjectProps) => {
+  //   console.log(file)
+  // }
 
   const onSubmit = async (data: NotificationsProps) => {
     const { body, title } = data
