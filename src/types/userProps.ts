@@ -10,7 +10,7 @@ export interface UserDataProps {
   displayName: string | null
   photoUrl: string | null
   id: string
-  isActive: boolean
+  accountStatus: 'PENDING_VERIFICATION' | 'ACTIVE' | 'SUSPENDED'
   favoritesArtists?: string[]
   favoritesMusics?: string[]
   tokenFcm: string

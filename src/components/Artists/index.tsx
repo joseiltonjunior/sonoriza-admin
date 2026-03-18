@@ -38,7 +38,7 @@ export function Artists() {
   const handleFilterArtists = (filter: string) => {
     if (filter.length < 3) return setArtistsFiltered(artists)
     const listFiltered = artists.filter((artist) =>
-      artist.name.toLowerCase().includes(filter.toLowerCase()),
+      artist.title.toLowerCase().includes(filter.toLowerCase()),
     )
 
     setArtistsFiltered(listFiltered)
@@ -116,7 +116,9 @@ export function Artists() {
             </div>
 
             <div className="flex flex-col items-start">
-              <p className="text-purple-600 font-bold text-lg">{artist.name}</p>
+              <p className="text-purple-600 font-bold text-lg">
+                {artist.title}
+              </p>
               <p>ID: {artist.id}</p>
             </div>
           </button>

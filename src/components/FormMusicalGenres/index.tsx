@@ -24,56 +24,60 @@ export function FormMusicalGenres({ isExist }: FormMusicalGenresProps) {
   const { closeModal } = useModal()
 
   const handleSaveNewMusicalGenre = async (data: MusicalGenresDataProps) => {
-    try {
-      await api.post('/genres', data)
+    await api
+      .post('/genres', data)
+      .then(async () => {
+        showToast('Musical genre added successfully', {
+          type: 'success',
+          theme: 'light',
+        })
 
-      showToast('Musical genre added successfully', {
-        type: 'success',
-        theme: 'light',
+        const responseGenres = await api
+          .get('/genres')
+          .then((res) => res.data.data as MusicalGenresDataProps[])
+        dispatch(handleSetMusicalGenres({ musicalGenres: responseGenres }))
+
+        setIsLoading(false)
+        closeModal()
       })
-
-      const responseGenres = await api
-        .get('/genres')
-        .then((res) => res.data.data as MusicalGenresDataProps[])
-      dispatch(handleSetMusicalGenres({ musicalGenres: responseGenres }))
-
-      setIsLoading(false)
-      closeModal()
-    } catch (error) {
-      setIsLoading(false)
-      showToast(`Error adding music`, {
-        type: 'error',
-        theme: 'light',
+      .catch((err) => {
+        const errResponse = err.response.data
+        setIsLoading(false)
+        showToast(`${errResponse.message}`, {
+          type: 'error',
+          theme: 'light',
+        })
       })
-    }
   }
 
   const handleEditMusicalGenre = async (
     data: MusicalGenresDataProps,
     id: string,
   ) => {
-    try {
-      await api.patch(`/genres/${id}`, data)
+    await api
+      .patch(`/genres/${id}`, data)
+      .then(async () => {
+        showToast('Musical genre edited successfully', {
+          type: 'success',
+          theme: 'light',
+        })
 
-      showToast('Musical genre edited successfully', {
-        type: 'success',
-        theme: 'light',
+        const responseGenres = await api
+          .get('/genres')
+          .then((res) => res.data.data as MusicalGenresDataProps[])
+        dispatch(handleSetMusicalGenres({ musicalGenres: responseGenres }))
+
+        setIsLoading(false)
+        closeModal()
       })
-
-      const responseGenres = await api
-        .get('/genres')
-        .then((res) => res.data.data as MusicalGenresDataProps[])
-      dispatch(handleSetMusicalGenres({ musicalGenres: responseGenres }))
-
-      setIsLoading(false)
-      closeModal()
-    } catch (error) {
-      setIsLoading(false)
-      showToast(`Error editing musical genre`, {
-        type: 'error',
-        theme: 'light',
+      .catch((err) => {
+        const errResponse = err.response.data
+        setIsLoading(false)
+        showToast(`${errResponse.message}`, {
+          type: 'error',
+          theme: 'light',
+        })
       })
-    }
   }
 
   const onSubmit = (data: MusicalGenresDataProps) => {
@@ -88,7 +92,7 @@ export function FormMusicalGenres({ isExist }: FormMusicalGenresProps) {
 
   useEffect(() => {
     if (isExist) {
-      setValue('name', isExist.name)
+      setValue('title', isExist.title)
     }
   }, [isExist, setValue])
 
@@ -98,7 +102,7 @@ export function FormMusicalGenres({ isExist }: FormMusicalGenresProps) {
         <Input
           placeholder="Digit new musical genre"
           label="Musical Genre"
-          name="name"
+          name="title"
           register={register}
           required
         />
