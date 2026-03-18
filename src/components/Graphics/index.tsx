@@ -52,7 +52,7 @@ export function Graphics({ metricsS3 }: GraphicsProps) {
   ])
 
   const graphicMusicsByGenre = useMemo(() => {
-    const categories = musicalGenres.map((genre) => genre.name)
+    const categories = musicalGenres.map((genre) => genre.title)
 
     const values = categories.map(
       (category) =>
@@ -67,7 +67,7 @@ export function Graphics({ metricsS3 }: GraphicsProps) {
     const allGenres = Array.from(
       new Set(
         artists.flatMap((artist) =>
-          artist.musicalGenres.map((genre) => genre.name),
+          artist.musicalGenres.map((genre) => genre.title),
         ),
       ),
     )
@@ -75,7 +75,7 @@ export function Graphics({ metricsS3 }: GraphicsProps) {
     const values = allGenres.map(
       (genre) =>
         artists.filter((artist) =>
-          artist.musicalGenres.some((g) => g.name === genre),
+          artist.musicalGenres.some((g) => g.title === genre),
         ).length,
     )
 

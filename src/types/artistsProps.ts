@@ -2,7 +2,7 @@ import { MusicalGenresDataProps } from './musicalGenresProps'
 
 export interface ArtistsResponseProps {
   id: string
-  name: string
+  title: string
   photoURL: string
   musics: string[]
   like: number
@@ -12,6 +12,6 @@ export interface ArtistsResponseProps {
 export interface ArtistsEditDataProps {
   id: string
   photoURL: string
-  name: string
+  title: string
   musicalGenres: string
 }

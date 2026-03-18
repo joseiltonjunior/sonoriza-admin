@@ -235,7 +235,7 @@ export function Home() {
 
         {tag === 'signUrl' && <SignCloudFrontUrl />}
 
-        {tag === 'graphics' && <Graphics metricsS3={bucketMetrics} />}        
+        {tag === 'graphics' && <Graphics metricsS3={bucketMetrics} />}
 
         {tag === 'notifications' && <Notifications />}
 

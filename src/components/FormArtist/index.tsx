@@ -37,6 +37,7 @@ interface FormArtistProps {
 
 export interface UploadObjectProps {
   file: FileWithType
+  title: string
 }
 
 export function FormArtist({ artist }: FormArtistProps) {
@@ -69,7 +70,7 @@ export function FormArtist({ artist }: FormArtistProps) {
   const musicalGenresOtions = useMemo(() => {
     const options = musicalGenres?.map((genre) => {
       return {
-        label: genre.name,
+        label: genre.title,
         value: genre.id,
       }
     })
@@ -82,63 +83,94 @@ export function FormArtist({ artist }: FormArtistProps) {
   const handleUpdateArtist = async (data: ArtistsEditDataProps) => {
     setIsLoading(true)
 
-    try {
-      await api.patch(`/artists/${artist?.id}`, {
-        name: data.name,
-        photoURL: data.photoURL,
+    await api
+      .patch(`/artists/${artist?.id}`, {
+        title: data.title,
+        photoURL:
+          data.photoURL === '@PUSH'
+            ? 'https://i.ibb.co/hZ7QNB3/sonoriza.png'
+            : data.photoURL,
         genreIds: [musicalGenresSelected[0].id],
       })
+      .then(async () => {
+        let imgUrl = ''
 
-      showToast('Artist updated successfully', {
-        type: 'success',
-        theme: 'light',
+        if (file) {
+          const response = await uploadObject({ file, title: data.title })
+
+          imgUrl = response[0].signedUrl
+        } else {
+          imgUrl = data.photoURL
+        }
+
+        await api.patch(`/artists/${artist?.id}`, {
+          photoURL: imgUrl,
+        })
+
+        const responseArtists = await api
+          .get('/artists')
+          .then((res) => res.data.data as ArtistsResponseProps[])
+        dispatch(handleSetArtists({ artists: responseArtists }))
+
+        showToast('Artist updated successfully', {
+          type: 'success',
+          theme: 'light',
+        })
+
+        setIsLoading(false)
+        closeModal()
       })
-
-      const responseArtists = await api
-        .get('/artists')
-        .then((res) => res.data.data as ArtistsResponseProps[])
-      dispatch(handleSetArtists({ artists: responseArtists }))
-
-      setIsLoading(false)
-      closeModal()
-    } catch (error) {
-      setIsLoading(true)
-      showToast(`Error updating artist`, {
-        type: 'error',
-        theme: 'light',
+      .catch((err) => {
+        const errResponse = err.response.data
+        setIsLoading(false)
+        showToast(`${errResponse.message}`, {
+          type: 'error',
+          theme: 'light',
+        })
       })
-    }
   }
 
   const handleSaveArtist = async (data: ArtistsEditDataProps) => {
     setIsLoading(true)
 
-    try {
-      await api.post('/artists', {
-        name: data.name,
-        photoURL: data.photoURL,
+    await api
+      .post('/artists', {
+        title: data.title,
+        photoURL: 'https://i.ibb.co/hZ7QNB3/sonoriza.png',
         genreIds: [data.musicalGenres],
       })
+      .then(async (response) => {
+        const newArtist = response.data as ArtistsResponseProps
+        if (file) {
+          const response = await uploadObject({ file, title: data.title })
 
-      showToast('Artist added successfully', {
-        type: 'success',
-        theme: 'light',
+          await api
+            .patch(`/artists/${newArtist.id}`, {
+              photoURL: response[0].signedUrl,
+            })
+            .then(async () => {
+              const responseArtists = await api
+                .get('/artists')
+                .then((res) => res.data.data as ArtistsResponseProps[])
+              dispatch(handleSetArtists({ artists: responseArtists }))
+
+              setIsLoading(false)
+              closeModal()
+              showToast('Artist added successfully', {
+                type: 'success',
+                theme: 'light',
+              })
+            })
+        }
       })
-
-      const responseArtists = await api
-        .get('/artists')
-        .then((res) => res.data.data as ArtistsResponseProps[])
-      dispatch(handleSetArtists({ artists: responseArtists }))
-
-      setIsLoading(false)
-      closeModal()
-    } catch (error) {
-      setIsLoading(false)
-      showToast(`Error adding artist`, {
-        type: 'error',
-        theme: 'light',
+      .catch((err) => {
+        const errResponse = err.response.data
+        setIsLoading(false)
+        showToast(`${errResponse.message}`, {
+          type: 'error',
+          theme: 'light',
+        })
       })
-    }
   }
 
   const handleGetMusics = async (id: string) => {
@@ -190,12 +222,12 @@ export function FormArtist({ artist }: FormArtistProps) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
 
-  const uploadObject = async ({ file }: UploadObjectProps) => {
+  const uploadObject = async ({ file, title }: UploadObjectProps) => {
     const formData = new FormData()
 
     formData.append('files', file)
     formData.append('folder', 'artists')
-    formData.append('slug', slugify(file.name))
+    formData.append('slug', slugify(title))
 
     const objectPathSigned = await api
       .post('/uploads', formData)
@@ -227,10 +259,10 @@ export function FormArtist({ artist }: FormArtistProps) {
     let formArtist: ArtistsEditDataProps
 
     if (file) {
-      const response = await uploadObject({ file })
       formArtist = {
         ...data,
-        photoURL: response[0].signedUrl,
+        photoURL: '@PUSH',
+        // photoURL: response[0].signedUrl,
       }
     } else {
       formArtist = {
@@ -254,7 +286,7 @@ export function FormArtist({ artist }: FormArtistProps) {
   useEffect(() => {
     if (artist) {
       setValue('id', artist.id)
-      setValue('name', artist.name)
+      setValue('title', artist.title)
       setValue('photoURL', artist.photoURL)
       setIsDrop(true)
 
@@ -334,20 +366,20 @@ export function FormArtist({ artist }: FormArtistProps) {
           <div className="grid grid-cols-6 gap-2 mt-2">
             {musicalGenresSelected.map((genre) => (
               <div
-                key={genre.name}
+                key={genre.title}
                 className="bg-transparent border border-gray-700 p-2 rounded-lg flex items-center justify-center relative overflow-hidden h-14"
               >
                 <button
                   className="absolute right-0 top-0 bg-red-600 p-1 rounded-bl-md hover:bg-red-700"
                   onClick={() => {
                     setMusicalGenresSelected((prev) =>
-                      prev.filter((item) => item.name !== genre.name),
+                      prev.filter((item) => item.title !== genre.title),
                     )
                   }}
                 >
                   <IoTrash color={colors.white} size={12} />
                 </button>
-                <p className="font-semibold text-center">{genre.name}</p>
+                <p className="font-semibold text-center">{genre.title}</p>
               </div>
             ))}
           </div>
@@ -360,7 +392,7 @@ export function FormArtist({ artist }: FormArtistProps) {
             <Input
               placeholder="Artist name"
               label="Artist"
-              name="name"
+              name="title"
               register={register}
               required
             />

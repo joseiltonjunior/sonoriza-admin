@@ -24,5 +24,4 @@ export interface MusicFormDataProps {
   artwork: string
   id?: string
   color: string
-  slug: string
 }

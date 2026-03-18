@@ -1,4 +1,4 @@
 export interface MusicalGenresDataProps {
-  name: string
+  title: string
   id: string
 }

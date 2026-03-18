@@ -59,7 +59,7 @@ export function SignIn() {
             admin: {
               email: user.email,
               name: user.name,
-              photoURL: user.photoURL,
+              photoURL: user.photoUrl,
               id: user.id,
             },
           }),
