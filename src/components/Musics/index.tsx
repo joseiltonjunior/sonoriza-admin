@@ -123,7 +123,7 @@ export function Musics() {
           <div className="items-end flex flex-col">
             {music.artists.map((artist) => (
               <p key={artist.id} className="font-semibold">
-                {artist.name}
+                {artist.title}
               </p>
             ))}
           </div>

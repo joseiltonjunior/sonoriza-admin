@@ -68,7 +68,7 @@ export function Notifications() {
       return
     }
 
-    const response = await uploadObject({ file })
+    // const response = await uploadObject({ file })
 
     const messages = users.map((user) => ({
       notification: {
@@ -79,7 +79,7 @@ export function Notifications() {
       token: user.tokenFcm,
     }))
 
-    console.log(messages, response)
+    console.log(messages, 'falta upload')
   }
 
   return (
