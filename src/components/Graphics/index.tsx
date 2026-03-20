@@ -1,96 +1,68 @@
-import { ReduxProps } from '@/storage'
-import { ArtistsProps } from '@/storage/modules/artists/reducer'
-import { MusicalGenresProps } from '@/storage/modules/musicalGenres/reducer'
-import { TrackListRemoteProps } from '@/storage/modules/trackListRemote/reducer'
-import { UsersProps } from '@/storage/modules/users/reducer'
 import ApexCharts from 'react-apexcharts'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSelector } from 'react-redux'
 import colors from 'tailwindcss/colors'
-import { GetMetricStatisticsOutput } from '@/types/metricsProps'
+
+import {
+  GetMetricStatisticsOutput,
+  MetricsOverviewProps,
+} from '@/types/metricsProps'
 
 interface GraphicsProps {
   metricsS3: GetMetricStatisticsOutput[]
+  metricsOverview: MetricsOverviewProps | null
 }
 
 interface GraphicData {
-  categories: string[]
+  bucketSizeCategories: string[]
   bucketSizeValues: number[]
+  numberOfObjectsCategories: string[]
   numberOfObjectsValues: number[]
 }
 
-export function Graphics({ metricsS3 }: GraphicsProps) {
-  const { artists } = useSelector<ReduxProps, ArtistsProps>(
-    (state) => state.artists,
-  )
-  const { trackListRemote } = useSelector<ReduxProps, TrackListRemoteProps>(
-    (state) => state.trackListRemote,
-  )
-  const { musicalGenres } = useSelector<ReduxProps, MusicalGenresProps>(
-    (state) => state.musicalGenres,
-  )
-
+export function Graphics({ metricsS3, metricsOverview }: GraphicsProps) {
   const [chartMetricsS3, setChartMetricsS3] = useState<GraphicData>()
-
-  const { users } = useSelector<ReduxProps, UsersProps>((state) => state.users)
 
   const graphicTotalData = useMemo(() => {
     const categories = ['Artists', 'Musics', 'Musical Genres', 'Users']
     const values = [
-      artists.length,
-      trackListRemote.length,
-      musicalGenres.length,
-      users.length,
+      metricsOverview?.totals.artists ?? 0,
+      metricsOverview?.totals.musics ?? 0,
+      metricsOverview?.totals.genres ?? 0,
+      metricsOverview?.totals.users ?? 0,
     ]
 
     return { categories, values }
-  }, [
-    artists.length,
-    musicalGenres.length,
-    trackListRemote.length,
-    users.length,
-  ])
+  }, [metricsOverview])
 
   const graphicMusicsByGenre = useMemo(() => {
-    const categories = musicalGenres.map((genre) => genre.title)
-
-    const values = categories.map(
-      (category) =>
-        trackListRemote.filter((music) => music.genre.includes(category))
-          .length,
-    )
+    const categories =
+      metricsOverview?.musicsByGenre.map((genre) => genre.title) ?? []
+    const values =
+      metricsOverview?.musicsByGenre.map((genre) => genre.total) ?? []
 
     return { categories, values }
-  }, [musicalGenres, trackListRemote])
+  }, [metricsOverview])
 
   const graphicArtistsByGenre = useMemo(() => {
-    const allGenres = Array.from(
-      new Set(
-        artists.flatMap((artist) =>
-          artist.musicalGenres.map((genre) => genre.title),
-        ),
-      ),
-    )
+    const categories =
+      metricsOverview?.artistsByGenre.map((genre) => genre.title) ?? []
+    const values =
+      metricsOverview?.artistsByGenre.map((genre) => genre.total) ?? []
 
-    const values = allGenres.map(
-      (genre) =>
-        artists.filter((artist) =>
-          artist.musicalGenres.some((g) => g.title === genre),
-        ).length,
-    )
-
-    return { categories: allGenres, values }
-  }, [artists])
-
-  const totalItems = graphicTotalData.values.reduce(
-    (acc, value) => acc + value,
-    0,
-  )
+    return { categories, values }
+  }, [metricsOverview])
 
   const convertBytesToMB = (bytes: number) => {
     const mbValue = bytes / 1024 ** 2
     return Number(mbValue.toFixed(2))
   }
+
+  const formatChartDate = (date: Date) =>
+    new Intl.DateTimeFormat('pt-BR', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+    }).format(date)
 
   const graphicData = useCallback(() => {
     const bucketSizeData = metricsS3.find(
@@ -100,58 +72,52 @@ export function Graphics({ metricsS3 }: GraphicsProps) {
       (item) => item.Label === 'NumberOfObjects',
     )
 
-    if (!bucketSizeData?.Datapoints || !numberOfObjectsData?.Datapoints) {
-      setChartMetricsS3({
-        bucketSizeValues: [],
-        categories: [],
-        numberOfObjectsValues: [],
-      })
-      return
-    }
+    const formattedBucketSizeData =
+      bucketSizeData?.Datapoints?.filter(
+        (point) => point.Timestamp !== undefined && point.Average !== undefined,
+      )
+        .map((point) => ({
+          timestamp: new Date(point.Timestamp!),
+          average: convertBytesToMB(point.Average!),
+        }))
+        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()) ?? []
 
-    const formattedBucketSizeData = bucketSizeData.Datapoints.filter(
-      (point) => point.Timestamp !== undefined && point.Average !== undefined,
-    )
-      .map((point) => ({
-        timestamp: new Date(point.Timestamp!),
-        average: convertBytesToMB(point.Average!),
-      }))
-      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+    const formattedNumberOfObjectsData =
+      numberOfObjectsData?.Datapoints?.filter(
+        (point) => point.Timestamp !== undefined && point.Average !== undefined,
+      )
+        .map((point) => ({
+          timestamp: new Date(point.Timestamp!),
+          average: point.Average!,
+        }))
+        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()) ?? []
 
-    const categories = formattedBucketSizeData.map((point) => {
-      const formatoData = new Intl.DateTimeFormat('pt-BR', {
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric',
-      })
-      return formatoData.format(point.timestamp)
+    setChartMetricsS3({
+      bucketSizeCategories: formattedBucketSizeData.map((point) =>
+        formatChartDate(point.timestamp),
+      ),
+      bucketSizeValues: formattedBucketSizeData.map((point) => point.average),
+      numberOfObjectsCategories: formattedNumberOfObjectsData.map((point) =>
+        formatChartDate(point.timestamp),
+      ),
+      numberOfObjectsValues: formattedNumberOfObjectsData.map(
+        (point) => point.average,
+      ),
     })
-
-    const bucketSizeValues = formattedBucketSizeData.map(
-      (point) => point.average,
-    )
-
-    const numberOfObjectsValues = numberOfObjectsData.Datapoints.filter(
-      (point) => point.Average !== undefined,
-    ).map((point) => point.Average!)
-
-    setChartMetricsS3({ bucketSizeValues, categories, numberOfObjectsValues })
   }, [metricsS3])
 
   useEffect(() => {
-    if (metricsS3) {
-      graphicData()
-    }
-  }, [graphicData, metricsS3])
+    graphicData()
+  }, [graphicData])
 
   return (
     <div className="mt-8 grid grid-cols-2 gap-12">
-      {chartMetricsS3 && chartMetricsS3.bucketSizeValues && (
+      {chartMetricsS3 && (
         <div>
           <ApexCharts
             options={{
               xaxis: {
-                categories: chartMetricsS3.categories,
+                categories: chartMetricsS3.bucketSizeCategories,
               },
               colors: [colors.purple[600]],
               stroke: {
@@ -191,17 +157,14 @@ export function Graphics({ metricsS3 }: GraphicsProps) {
         </div>
       )}
 
-      {chartMetricsS3 && chartMetricsS3.numberOfObjectsValues && (
+      {chartMetricsS3 && (
         <div>
           <ApexCharts
             options={{
-              labels: chartMetricsS3.categories,
-              colors: [
-                colors.purple[600],
-                colors.blue[600],
-                colors.green[600],
-                colors.orange[600],
-              ],
+              xaxis: {
+                categories: chartMetricsS3.numberOfObjectsCategories,
+              },
+              colors: [colors.blue[600]],
               stroke: {
                 width: 5,
                 curve: 'smooth',
@@ -230,9 +193,7 @@ export function Graphics({ metricsS3 }: GraphicsProps) {
             series={[
               {
                 name: 'NumberOfObjects',
-                data: chartMetricsS3.numberOfObjectsValues.sort(
-                  (a, b) => a - b,
-                ),
+                data: chartMetricsS3.numberOfObjectsValues,
               },
             ]}
             type="line"
@@ -240,6 +201,7 @@ export function Graphics({ metricsS3 }: GraphicsProps) {
           />
         </div>
       )}
+
       <div>
         <ApexCharts
           options={{
@@ -251,7 +213,7 @@ export function Graphics({ metricsS3 }: GraphicsProps) {
               colors.orange[600],
             ],
             title: {
-              text: 'Firebase - Total documents',
+              text: 'Total documents',
               align: 'left',
               style: {
                 fontSize: '16px',
@@ -266,7 +228,13 @@ export function Graphics({ metricsS3 }: GraphicsProps) {
                     total: {
                       show: true,
                       label: 'Total Items',
-                      formatter: () => totalItems.toString(),
+                      formatter: (w) =>
+                        w.globals.seriesTotals
+                          .reduce(
+                            (acc: number, value: number) => acc + value,
+                            0,
+                          )
+                          .toString(),
                     },
                   },
                 },
@@ -316,9 +284,12 @@ export function Graphics({ metricsS3 }: GraphicsProps) {
                     total: {
                       show: true,
                       label: 'Total Musics',
-                      formatter: () =>
-                        graphicMusicsByGenre.values
-                          .reduce((acc, value) => acc + value, 0)
+                      formatter: (w) =>
+                        w.globals.seriesTotals
+                          .reduce(
+                            (acc: number, value: number) => acc + value,
+                            0,
+                          )
                           .toString(),
                     },
                   },
@@ -361,9 +332,12 @@ export function Graphics({ metricsS3 }: GraphicsProps) {
                     total: {
                       show: true,
                       label: 'Total Artists',
-                      formatter: () =>
-                        graphicArtistsByGenre.values
-                          .reduce((acc, value) => acc + value, 0)
+                      formatter: (w) =>
+                        w.globals.seriesTotals
+                          .reduce(
+                            (acc: number, value: number) => acc + value,
+                            0,
+                          )
                           .toString(),
                     },
                   },

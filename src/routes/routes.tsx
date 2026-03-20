@@ -4,6 +4,8 @@ import { Error } from '@/pages/Error'
 import { Home } from '@/pages/Home'
 import { SignIn } from '@/pages/SignIn'
 import { createBrowserRouter } from 'react-router-dom'
+import { PrivateRoute } from './PrivateRoute'
+import { PublicRoute } from './PublicRoute'
 
 export const router = createBrowserRouter([
   {
@@ -12,12 +14,22 @@ export const router = createBrowserRouter([
     errorElement: <Error />,
     children: [
       {
-        path: '/',
-        element: <SignIn />,
+        element: <PublicRoute />,
+        children: [
+          {
+            index: true,
+            element: <SignIn />,
+          },
+        ],
       },
       {
-        path: '/home',
-        element: <Home />,
+        element: <PrivateRoute />,
+        children: [
+          {
+            path: 'home',
+            element: <Home />,
+          },
+        ],
       },
     ],
   },

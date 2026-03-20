@@ -10,6 +10,9 @@ Sonoriza Admin is the web client responsible for the platform's administrative o
 
 The admin currently covers:
 - administrator authentication
+- device-aware session creation
+- single-session account flow aligned with the backend
+- automatic access token refresh
 - artist management
 - music genre management
 - music management
@@ -97,20 +100,27 @@ The admin consumes the Sonoriza API as the central source of data and operations
 
 Integrated flows:
 - `/sessions` for authentication
+- `/sessions/refresh` for session renewal
+- `/sessions/logout` for logout and session invalidation
 - `/users` and `/me` for users
 - `/artists` for artists
 - `/genres` for music genres
 - `/musics` for musics
 - `/uploads` for file upload and URL signing
-- `/metrics` for metrics
+- `/metrics/storage` for storage metrics
+- `/metrics/overview` for dashboard totals and genre distributions
 
 ## Features by domain
 
 ### Authentication
 
 - administrator login
-- token persistence in the frontend
-- redirect to the initial screen on `401`
+- device payload sent on sign-in
+- session creation tied to persisted web device identity
+- access token and refresh token persistence
+- automatic session refresh on `401`
+- logout with backend session invalidation
+- public and private route handling
 
 ### Artists
 
@@ -130,6 +140,8 @@ Integrated flows:
 - create music
 - edit music
 - remove music
+- list musics with incremental scroll loading
+- search musics through API pagination
 - link music to artists
 - define music genre
 - send cover art and audio file through the API
@@ -144,7 +156,8 @@ Integrated flows:
 
 - file uploads through the API endpoint
 - consume URLs used in the panel
-- query metrics delivered by the API
+- query storage metrics through the API
+- query overview metrics for dashboard totals and charts
 
 ## Architecture summary
 
@@ -165,6 +178,10 @@ src/
 - The frontend currently operates with API-centered integration.
 - The CMS no longer depends on Firebase or direct frontend calls to AWS in the current flow.
 - Uploads, file signing, and metrics are consumed through API endpoints.
+- Session creation in the web client includes persisted device identity data.
+- The current session model assumes one active session per account, coordinated by the backend.
+- The `/home` screen is protected through private-route handling.
+- The music list consumes paginated API responses and auto-loads the next page near the end of the scroll.
 - The default Vite port is set to `3000`.
 - The `@` alias points to `src`.
 

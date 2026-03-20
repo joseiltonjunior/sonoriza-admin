@@ -11,7 +11,9 @@ import { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { handleSetAdmin } from '@/storage/modules/admin/reducer'
 
-import { api, TOKEN_KEY } from '@/services/api'
+import { api, logoutCurrentSession } from '@/services/api'
+import { clearSessionTokens, setSessionTokens } from '@/services/authStorage'
+import { buildWebDevice } from '@/services/webDevice'
 
 interface SignInProps {
   email: string
@@ -35,54 +37,74 @@ export function SignIn() {
   const [isLoading, setIsLoading] = useState(false)
 
   async function handleAuthenticateUser(data: SignInProps) {
-    localStorage.removeItem(TOKEN_KEY)
+    clearSessionTokens()
     setIsLoading(true)
-    await api
-      .post('/sessions', {
+
+    const device = buildWebDevice('admin-web@1.0.0')
+
+    try {
+      const response = await api.post('/sessions', {
         email: data.email,
         password: data.password,
+        device,
       })
-      .then((response) => {
-        const { access_token: token, user } = response.data
 
-        if (user.role !== 'ADMIN') {
-          setIsLoading(false)
-          showToast(`Unauthorized Access`, {
-            type: 'error',
-            theme: 'light',
-          })
-          return
-        }
+      const {
+        access_token: accessToken,
+        user,
+        refresh_token: refreshToken,
+      } = response.data
 
-        dispatch(
-          handleSetAdmin({
-            admin: {
-              email: user.email,
-              name: user.name,
-              photoURL: user.photoUrl,
-              id: user.id,
-            },
-          }),
-        )
-        navigate(`/home`, { replace: true })
-        showToast(`Welcome Back ${user.name?.split(' ')[0]}.`, {
-          type: 'info',
-          theme: 'light',
-        })
+      if (user.role !== 'ADMIN') {
+        await logoutCurrentSession(refreshToken).catch(() => undefined)
+        clearSessionTokens()
 
-        localStorage.setItem('@sonoriza:token', token)
-      })
-      .catch((err) => {
-        const errResponse = err.response.data
-        setError('email', { message: `* ${errResponse.message}` })
-        setError('password', { message: `* ${errResponse.message}` })
-
-        showToast(`${errResponse.message}`, {
+        showToast(`Unauthorized Access`, {
           type: 'error',
           theme: 'light',
         })
+
+        return
+      }
+
+      setSessionTokens({
+        accessToken,
+        refreshToken,
       })
-      .finally(() => setIsLoading(false))
+
+      dispatch(
+        handleSetAdmin({
+          admin: {
+            email: user.email,
+            name: user.name,
+            photoURL: user.photoUrl,
+            id: user.id,
+          },
+        }),
+      )
+
+      navigate(`/home`, { replace: true })
+      showToast(`Welcome Back ${user.name?.split(' ')[0]}.`, {
+        type: 'info',
+        theme: 'light',
+      })
+    } catch (err) {
+      const errResponse = err as {
+        response?: { data?: { message?: string } }
+      }
+      const message =
+        errResponse.response?.data?.message ?? 'Error authenticating user'
+
+      setError('email', { message: `* ${message}` })
+      setError('password', { message: `* ${message}` })
+
+      showToast(message, {
+        type: 'error',
+        theme: 'light',
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
