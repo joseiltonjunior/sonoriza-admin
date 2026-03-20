@@ -2,30 +2,32 @@ import { useFloatMenu } from '@/hooks/useFloatMenu'
 import { useModal } from '@/hooks/useModal'
 import { useNavigate } from 'react-router-dom'
 
-import { useDispatch } from 'react-redux'
-import { handleSetArtists } from '@/storage/modules/artists/reducer'
-import { handleTrackListRemote } from '@/storage/modules/trackListRemote/reducer'
-import { handleSetMusicalGenres } from '@/storage/modules/musicalGenres/reducer'
-import { TOKEN_KEY } from '@/services/api'
-import { handleSetAdmin } from '@/storage/modules/admin/reducer'
-import { handleSetUsers } from '@/storage/modules/users/reducer'
+import { logoutCurrentSession } from '@/services/api'
+import { useToast } from '@/hooks/useToast'
+import { clearClientSession, getRefreshToken } from '@/services/authStorage'
 
 export function FloatMenu() {
   const { isVisible, show } = useFloatMenu()
   const { openModal } = useModal()
   const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const { showToast } = useToast()
 
   const handleSignOut = async () => {
-    dispatch(handleSetArtists({ artists: [] }))
-    dispatch(handleTrackListRemote({ trackListRemote: [] }))
-    dispatch(handleSetMusicalGenres({ musicalGenres: [] }))
-    dispatch(
-      handleSetAdmin({ admin: { email: '', id: '', name: '', photoURL: '' } }),
-    )
-    dispatch(handleSetUsers({ users: [] }))
-    localStorage.removeItem(TOKEN_KEY)
-    navigate('/')
+    const refreshToken = getRefreshToken()
+
+    try {
+      if (refreshToken) {
+        await logoutCurrentSession(refreshToken)
+      }
+    } catch (error) {
+      showToast('Error logout user', {
+        type: 'error',
+        theme: 'colored',
+      })
+    } finally {
+      clearClientSession()
+      navigate('/', { replace: true })
+    }
   }
 
   return (
