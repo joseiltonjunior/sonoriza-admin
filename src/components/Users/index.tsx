@@ -26,7 +26,7 @@ export function Users() {
   }, [])
 
   const handleChangeUserStts = useCallback(
-    async (userId: string, isStatus: string) => {      
+    async (userId: string, isStatus: string) => {
       try {
         await api.patch(`/users/${userId}/status`, {
           accountStatus: isStatus,
@@ -38,12 +38,12 @@ export function Users() {
           handleSetUsers({ users: usersResponse.data.data as UserDataProps[] }),
         )
 
-        showToast('User plan updated successfully', {
+        showToast('User active successfully', {
           type: 'success',
           theme: 'light',
         })
       } catch (error) {
-        showToast(`Error updating user plan`, {
+        showToast(`Error for active to user`, {
           type: 'error',
           theme: 'light',
         })
@@ -130,7 +130,9 @@ export function Users() {
           <Select
             label="Status"
             options={plainOptions}
-            onChange={(e) => handleChangeUserStts(user.id, e.currentTarget.value)}
+            onChange={(e) =>
+              handleChangeUserStts(user.id, e.currentTarget.value)
+            }
             value={user.accountStatus}
           />
 

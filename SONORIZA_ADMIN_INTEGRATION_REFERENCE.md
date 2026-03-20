@@ -31,6 +31,11 @@ Sonoriza Admin is the web CMS responsible for administrative operations in the S
 
 The current admin already supports:
 - administrator authentication
+- device-aware session creation
+- single-session account flow coordinated by the backend
+- access token and refresh token persistence
+- automatic session refresh in the HTTP client
+- backend-backed logout with session invalidation
 - artist catalog management
 - music catalog management
 - genre management
@@ -170,9 +175,10 @@ Current routes:
 - `/home` - main admin dashboard
 
 Current behavior:
-- route registration is static through React Router
-- there is no dedicated route guard component protecting `/home`
-- access is operationally controlled by login flow and backend authorization
+- route registration is handled through React Router
+- `/` is wrapped in a public route
+- `/home` is wrapped in a private route
+- route bootstrap can attempt token refresh before resolving access
 
 ## State management model
 
@@ -191,7 +197,7 @@ Current non-persisted slice:
 Persistence notes:
 - redux-persist is configured at the root reducer level
 - the side menu selection is explicitly blacklisted from persistence
-- sign-out manually clears the relevant slices and removes the access token from local storage
+- client session cleanup clears the relevant slices and stored tokens
 
 ## HTTP client behavior
 
@@ -199,18 +205,27 @@ The admin uses a centralized Axios instance.
 
 Current HTTP behavior:
 - reads base URL from `VITE_API_URL`
-- injects `Authorization: Bearer <token>` when a token exists in local storage
-- clears the stored token on `401`
-- redirects the user back to `/` on `401`
+- injects `Authorization: Bearer <token>` when an access token exists
+- attempts `POST /sessions/refresh` on `401`
+- retries the original request after a successful refresh
+- clears the client session and redirects to `/` when refresh fails
 
-Current token storage key:
-- `@sonoriza:token`
+Current token storage keys:
+- `@SONORIZA_ACCESS_TOKEN`
+- `@SONORIZA_REFRESH_TOKEN`
+
+Current device storage key:
+- `@SONORIZA:WEB_DEVICE_KEY`
 
 ## Authentication and session behavior
 
 ## Current access model in the admin
 
-The CMS currently uses only the API `access_token` in its implemented frontend flow.
+The CMS currently uses both:
+- `access_token` for protected requests
+- `refresh_token` for refresh and logout flows
+
+The web client also sends device information when creating a session.
 
 ### Login
 
@@ -218,42 +233,71 @@ Endpoint used:
 - `POST /sessions`
 
 Current frontend behavior:
-- sends `email` and `password`
-- reads `access_token` and `user` from the response
+- sends `email`, `password`, and `device`
+- generates or reuses a persisted web `deviceKey`
+- derives browser and OS information from the runtime
+- reads `access_token`, `refresh_token`, and `user` from the response
 - validates `user.role === 'ADMIN'` in the client
-- stores only the access token in local storage
+- stores access and refresh tokens in local storage
 - stores admin profile data in Redux
 - redirects to `/home`
+
+Current device payload shape includes:
+- `deviceKey`
+- `platform`
+- `deviceName`
+- `manufacturer`
+- `model`
+- `osName`
+- `osVersion`
+- `appVersion`
 
 ### Session persistence
 
 Current implementation:
 - persists the access token in local storage
+- persists the refresh token in local storage
+- persists a web device key in local storage
 - persists admin-related state in Redux Persist
 - automatically attaches the access token to protected API requests
+
+### Refresh flow
+
+Current implementation:
+- if the app has only a refresh token, route bootstrap can attempt refresh before resolving access
+- if a protected request returns `401`, the HTTP client attempts `POST /sessions/refresh`
+- the original request is retried after a successful refresh
+- concurrent refresh attempts are deduplicated in the client
+- if refresh fails, the client session is cleared and the user is redirected to `/`
 
 ### Unauthorized behavior
 
 When the API returns `401`:
-- access token is removed
-- user is redirected to `/`
+- the client first tries to refresh the session
+- if refresh succeeds, the original request is replayed
+- if refresh fails, tokens and client state are cleared and the user is redirected to `/`
 
 ### Sign out
 
 Current sign-out behavior in the UI:
+- reads the stored `refresh_token`
+- calls `POST /sessions/logout` when a refresh token exists
 - clears artists, musics, genres, users, and admin slices
-- removes the stored access token
+- clears stored access and refresh tokens
 - redirects to `/`
+- keeps the persisted web device key so the browser identity remains stable across logins
 
 ### Current limitations in session flow
 
 Not implemented yet in the current admin code:
-- refresh token persistence
-- `POST /sessions/refresh`
-- `POST /sessions/logout`
-- route-level auth guard for `/home`
+- session status UI while access is being resolved
+- explicit handling for multi-device/session-conflict responses beyond surfacing backend error messages
 
-This means the API already supports a broader session lifecycle than the admin currently consumes.
+Current operational caveat:
+- if browser storage is manually cleared without calling logout, the backend session can remain active until it is invalidated, refreshed elsewhere, or expires according to backend policy
+- in that situation, the account can appear "stuck" from the user perspective even though the CMS has already lost the local tokens
+
+The admin now consumes the main session lifecycle endpoints exposed by the API.
 
 ## Dashboard bootstrap flow
 
@@ -265,10 +309,13 @@ Initial requests:
 - `GET /genres`
 - `GET /users`
 - `GET /metrics/storage`
+- `GET /metrics/overview`
 
 Current behavior:
 - catalog and users are loaded into Redux
-- metrics are stored in local component state for charts
+- the music bootstrap stores both the first page items and the pagination meta returned by the API
+- storage and overview metrics are stored in local component state for charts
+- the graphics area is rendered only after metrics finish loading
 - failures surface toast notifications
 
 ## Music domain in the CMS
@@ -277,7 +324,7 @@ Current behavior:
 
 The CMS supports:
 - list musics
-- search musics locally by title
+- search musics by title through the API
 - create music
 - edit music
 - delete music
@@ -286,6 +333,8 @@ The CMS supports:
 ### Endpoints currently used by the admin
 
 - `GET /musics`
+- `GET /musics?page=<n>`
+- `GET /musics?page=<n>&title=<query>`
 - `GET /musics/:id`
 - `POST /musics`
 - `PATCH /musics/:id`
@@ -299,7 +348,7 @@ The admin currently:
 2. uploads artwork and audio through `POST /uploads`
 3. reads returned `signedUrl` values
 4. sends the final music payload to the API
-5. reloads artist and music data after a successful mutation
+5. reloads artist data and reloads the already-open music pages after a successful mutation
 
 Current payload assembly includes:
 - `title`
@@ -316,7 +365,11 @@ Current payload assembly includes:
 - artwork colors are extracted client-side from the dropped image
 - edit mode fetches the music by id before populating the form
 - artist selection is maintained locally in component state
-- list filtering is done client-side after the initial fetch
+- the first music page is loaded during dashboard bootstrap and stored with pagination meta
+- the music list auto-loads the next page when the scroll reaches roughly 80 percent of the page
+- previously loaded music pages remain rendered when a new page is appended
+- the automatic loader stops when `page === lastPage`
+- title search uses the API filter and keeps the same incremental pagination behavior
 
 ## Artist domain in the CMS
 
@@ -445,6 +498,7 @@ Current UI behavior:
 
 The dashboard consumes backend metrics through:
 - `GET /metrics/storage`
+- `GET /metrics/overview`
 
 ### Current chart behavior
 
@@ -454,6 +508,11 @@ The UI currently renders:
 - total items donut chart based on artists, musics, genres, and users
 - musics by genre chart
 - artists by genre chart
+
+Current data source split:
+- `GET /metrics/storage` powers the storage history charts
+- `GET /metrics/overview` powers totals, musics by genre, and artists by genre
+- overview charts no longer depend on paginated frontend catalog slices
 
 ### Current implementation note
 
@@ -483,6 +542,8 @@ Current note:
 
 Sonoriza Admin should rely on the API for:
 - login through `POST /sessions`
+- refresh through `POST /sessions/refresh`
+- logout through `POST /sessions/logout`
 - music CRUD through `/musics`
 - artist CRUD through `/artists`
 - genre management through `/genres`
@@ -490,25 +551,23 @@ Sonoriza Admin should rely on the API for:
 - uploads through `/uploads`
 - signed URL generation through `/uploads/sign`
 - storage metrics through `/metrics/storage`
+- dashboard overview metrics through `/metrics/overview`
 
 The admin should not call AWS services directly.
 
 ## Current limitations and next natural steps
 
 Known limitations in the current admin implementation:
-- no refresh token lifecycle in the frontend yet
-- no logout endpoint integration yet
-- no route guard around `/home`
-- list filtering is mostly client-side instead of using API filters directly
 - genre deletion is not exposed in the current UI
 - notifications flow is incomplete
 - some legacy labels still mention older infrastructure terms
+- only the music list currently uses incremental API pagination in the UI
+- clearing browser storage without logout can leave an active backend session behind until backend invalidation or expiration
 
 Most natural next steps:
-- implement refresh token flow with `POST /sessions/refresh`
-- implement logout through `POST /sessions/logout`
-- add protected route handling for authenticated admin screens
-- move list filtering and pagination closer to the API contract
+- add a better loading or splash state while auth is being resolved
+- surface clearer UX for active-session conflicts between devices
+- extend the pagination pattern to other large admin lists when the volume justifies it
 - expose genre deletion if it is part of the intended admin workflow
 - remove legacy naming in the UI to reflect the API-centered architecture
 
@@ -517,15 +576,17 @@ Most natural next steps:
 Sonoriza Admin is currently an API-centered administrative CMS for the Sonoriza platform.
 
 At the current stage, it already provides:
-- admin authentication with access-token-based requests
+- admin authentication with device-aware session creation
+- backend-aligned single-session account behavior
+- access-token requests with refresh-token recovery
 - catalog operations for artists, genres, and musics
 - user administration
 - backend-mediated uploads
 - backend-mediated URL signing
-- backend-mediated storage metrics
+- backend-mediated storage and overview metrics
 - Redux-backed dashboard state
 
-The main integration gap is not catalog CRUD anymore. It is session maturity in the frontend, especially refresh-token handling, logout integration, and route protection.
+The remaining gaps are mostly UX and completeness details around the newer session model, not the basic integration itself.
 
 ## Credits
 

@@ -22,14 +22,20 @@ import {
   handleSetArtists,
 } from '@/storage/modules/artists/reducer'
 import { MusicalGenresProps } from '@/storage/modules/musicalGenres/reducer'
-
-import { handleTrackListRemote } from '@/storage/modules/trackListRemote/reducer'
+import {
+  TrackListRemoteProps,
+  handleTrackListRemote,
+} from '@/storage/modules/trackListRemote/reducer'
 import { FormArtist } from '../FormArtist'
 import colors from 'tailwindcss/colors'
 import { FileWithType, useUpload } from '@/hooks/useUpload'
 
 import { api } from '@/services/api'
 import { UploadObjectResponseProps } from '@/types/uploadProps'
+import {
+  type PaginatedResponseProps,
+  normalizePaginationMeta,
+} from '@/types/paginationProps'
 
 interface FormMusicProps {
   musicId?: string
@@ -72,6 +78,39 @@ export function FormMusic({ musicId }: FormMusicProps) {
   const { musicalGenres } = useSelector<ReduxProps, MusicalGenresProps>(
     (state) => state.musicalGenres,
   )
+  const { currentPage } = useSelector<ReduxProps, TrackListRemoteProps>(
+    (state) => state.trackListRemote,
+  )
+
+  const reloadLoadedMusics = async () => {
+    const pagesToLoad = Math.max(currentPage, 1)
+
+    const responses = await Promise.all(
+      Array.from({ length: pagesToLoad }, (_, index) =>
+        api.get<PaginatedResponseProps<MusicResponseProps>>('/musics', {
+          params: {
+            page: index + 1,
+          },
+        }),
+      ),
+    )
+
+    const mergedMusics = responses.flatMap((response) => response.data.data)
+    const lastResponse = responses[responses.length - 1]
+    const paginationMeta = normalizePaginationMeta(
+      lastResponse.data.meta,
+      mergedMusics.length,
+    )
+
+    dispatch(
+      handleTrackListRemote({
+        trackListRemote: mergedMusics,
+        currentPage: paginationMeta.currentPage,
+        lastPage: paginationMeta.lastPage,
+        totalItems: paginationMeta.totalItems,
+      }),
+    )
+  }
 
   const handleUpdateMusic = async (data: MusicFormDataProps, id: string) => {
     if (id) {
@@ -119,10 +158,7 @@ export function FormMusic({ musicId }: FormMusicProps) {
             theme: 'light',
           })
 
-          const responseMusics = await api
-            .get('/musics')
-            .then((res) => res.data.data as MusicResponseProps[])
-          dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
+          await reloadLoadedMusics()
 
           setIsLoading(false)
           closeModal()
@@ -185,10 +221,7 @@ export function FormMusic({ musicId }: FormMusicProps) {
           .then((res) => res.data.data as ArtistsResponseProps[])
         dispatch(handleSetArtists({ artists: responseArtists }))
 
-        const responseMusics = await api
-          .get('/musics')
-          .then((res) => res.data.data as MusicResponseProps[])
-        dispatch(handleTrackListRemote({ trackListRemote: responseMusics }))
+        await reloadLoadedMusics()
 
         setIsLoading(false)
         closeModal()
@@ -279,7 +312,9 @@ export function FormMusic({ musicId }: FormMusicProps) {
     const newMusic = {
       artistIds: selectedArtists.map((artist) => artist.id),
       url: data.url ? data.url : 'https://i.ibb.co/hZ7QNB3/sonoriza.png',
-      artwork: data.artwork ? data.artwork : 'https://i.ibb.co/hZ7QNB3/sonoriza.png',
+      artwork: data.artwork
+        ? data.artwork
+        : 'https://i.ibb.co/hZ7QNB3/sonoriza.png',
       genreId: data.genreId,
       album: data.album,
       color: data.color,
@@ -405,7 +440,7 @@ export function FormMusic({ musicId }: FormMusicProps) {
 
       fetchMusic()
     }
-  }, [musicId])
+  }, [musicId, showToast])
 
   useEffect(() => {
     if (music) {

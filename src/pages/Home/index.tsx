@@ -43,7 +43,14 @@ import { MusicalGenresDataProps } from '@/types/musicalGenresProps'
 import { MusicResponseProps } from '@/types/musicProps'
 import { ArtistsResponseProps } from '@/types/artistsProps'
 import { UserDataProps } from '@/types/userProps'
-import { GetMetricStatisticsOutput } from '@/types/metricsProps'
+import {
+  GetMetricStatisticsOutput,
+  MetricsOverviewProps,
+} from '@/types/metricsProps'
+import {
+  type PaginatedResponseProps,
+  normalizePaginationMeta,
+} from '@/types/paginationProps'
 
 export function Home() {
   const { showToast } = useToast()
@@ -52,6 +59,9 @@ export function Home() {
   const [bucketMetrics, setBucketMetrics] = useState<
     GetMetricStatisticsOutput[]
   >([])
+  const [overviewMetrics, setOverviewMetrics] =
+    useState<MetricsOverviewProps | null>(null)
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(false)
 
   const { artists } = useSelector<ReduxProps, ArtistsProps>(
     (state) => state.artists,
@@ -115,18 +125,31 @@ export function Home() {
   useEffect(() => {
     async function handleFetchMetricsAWS() {
       try {
-        const response = (await api
-          .get('/metrics/storage')
-          .then((res) => res.data.data)) as GetMetricStatisticsOutput[]
+        setIsLoadingMetrics(true)
+        const [responseMetricsStorage, responseMetricsOverview] =
+          await Promise.all([
+            api
+              .get('/metrics/storage')
+              .then((res) => res.data.data as GetMetricStatisticsOutput[]),
+            api
+              .get('/metrics/overview')
+              .then((res) => res.data as MetricsOverviewProps),
+          ])
 
-        if (response) {
-          setBucketMetrics(response)
+        if (responseMetricsOverview) {
+          setOverviewMetrics(responseMetricsOverview)
+        }
+
+        if (responseMetricsStorage) {
+          setBucketMetrics(responseMetricsStorage)
         }
       } catch (error) {
         showToast('Error fetching metric', {
           type: 'error',
           theme: 'colored',
         })
+      } finally {
+        setIsLoadingMetrics(false)
       }
     }
 
@@ -139,15 +162,23 @@ export function Home() {
         setIsLoading(true)
         const [musicsResponse, artistsResponse, genresResponse, usersResponse] =
           await Promise.all([
-            api.get('/musics'),
+            api.get<PaginatedResponseProps<MusicResponseProps>>('/musics'),
             api.get('/artists'),
             api.get('/genres'),
             api.get('/users'),
           ])
 
+        const musicsMeta = normalizePaginationMeta(
+          musicsResponse.data.meta,
+          musicsResponse.data.data.length,
+        )
+
         dispatch(
           handleTrackListRemote({
             trackListRemote: musicsResponse.data.data as MusicResponseProps[],
+            currentPage: musicsMeta.currentPage,
+            lastPage: musicsMeta.lastPage,
+            totalItems: musicsMeta.totalItems,
           }),
         )
 
@@ -235,7 +266,12 @@ export function Home() {
 
         {tag === 'signUrl' && <SignCloudFrontUrl />}
 
-        {tag === 'graphics' && <Graphics metricsS3={bucketMetrics} />}
+        {tag === 'graphics' && !isLoadingMetrics && overviewMetrics && (
+          <Graphics
+            metricsS3={bucketMetrics}
+            metricsOverview={overviewMetrics}
+          />
+        )}
 
         {tag === 'notifications' && <Notifications />}
 
