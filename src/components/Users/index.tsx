@@ -38,12 +38,12 @@ export function Users() {
           handleSetUsers({ users: usersResponse.data.data as UserDataProps[] }),
         )
 
-        showToast('User plan updated successfully', {
+        showToast('User active successfully', {
           type: 'success',
           theme: 'light',
         })
       } catch (error) {
-        showToast(`Error updating user plan`, {
+        showToast(`Error for active to user`, {
           type: 'error',
           theme: 'light',
         })
